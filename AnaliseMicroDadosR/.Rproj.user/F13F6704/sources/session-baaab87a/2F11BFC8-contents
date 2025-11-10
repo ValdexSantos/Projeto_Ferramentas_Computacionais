@@ -1,0 +1,33 @@
+# Instalando pacote para ler arquivo xlsx do dos microdados
+install.packages("readxl")
+
+# Carrega o pacote
+library(readxl)
+
+setwd("~/Documentos/Github/Projeto_Ferramentas_Compuacionais/microdados_censo_da_educacao_superior_2024/")
+
+# Arquivo dicionário de dados
+pasta_dic_dados <- "/users/waldex/Documents/Github/Projeto_Ferramentas_Computacionais/microdados_censo_da_educacao_superior_2024"
+#dir.exists(pasta_dic_dados)
+
+#getwd()
+
+# Lista o conteúdo da pasta
+list.files(pasta_dic_dados)
+
+library(readxl)
+
+# Caminho completo — ajuste se a variável pasta_dic_dados já estiver definida
+arquivo_dic <- file.path(pasta_dic_dados, "dicionário_dados_educação_superior.xlsx")
+
+# Lê o arquivo Excel
+dic_dados <- read_excel(arquivo_dic)
+
+# Visualiza as primeiras linhas
+head(dic_dados)
+
+# Visualiza de forma interativa
+#View(dic_dados)
+
+
+
