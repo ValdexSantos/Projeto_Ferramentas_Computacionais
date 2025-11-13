@@ -251,13 +251,8 @@ cat(paste("Total de instituições:", total, "\n\n"))
 ```
 Temos um total de 2561 Instituições de Ensino Superior (IES) no Brasil, segundo os dados disponibilizados. Destas a grande maioria, cerca de 42, 01% estão localizadas na região Sudeste. a região Norte é o que tem menos insitutições superiores, apenas 7,65%. Observe que se somarmos o quantitativo das regiões Norte, Sul e Centro-Oeste não atingimos o total de instituições da região sudeste.  O que mostra a grande discrepância do número de instituições de nível superior nas regiões do Brasil, conforme evidencia o gráfico seguinte.
 ```{r}
-library(knitr)
 # Exibindo a tabela  com os valores absoltuos e percentuais
-kable(
-  tabela_frequencia,
-  caption = "Tabela 1: Valores absolutos e percentuais de IES por região",
-  format = "pipe" # ou "html", "latex", dependendo do seu output
-)
+tabela_frequencia
 ```
 
-
+### Análise
