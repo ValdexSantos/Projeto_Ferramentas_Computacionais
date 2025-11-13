@@ -482,7 +482,7 @@ ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
   geom_bar(position = "stack") + 
   
   labs(
-    title = 'Distribuição de Instituições por Região e Tipo de IES (Pública x Privada)',
+    title = 'Figura 4: Distribuição de Instituições por Região e Tipo de IES (Pública x Privada)',
     x = 'Região',
     y = 'Quantidade de Instituições'
   ) +
