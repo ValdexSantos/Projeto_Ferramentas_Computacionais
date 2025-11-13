@@ -279,15 +279,9 @@ ggplot(dados_ies, aes(x = REGIAO)) + # Define os dados e a variável X
   theme_minimal()
 ```
 
-Sudeste e Nordeste são as duas regiões do Brasil mais populosas de acordo com IBGE (IBGE, 2022), o que nos faz
-pensar, obviamente, que por conta disso tem maior quantidade de IES, tendo em vista a maior demanda populacional.
-Isso nos leva a indagar se em termos percentuais há uma discrepância ou similaridade na quantidade de instituições
-superiores em nosso território, conforme as necessidades de cada região em número de habitantes. Para responder a tal
-indagação iremos ver a relação entre quantidade de IES e a população.
+Sudeste e Nordeste são as duas regiões do Brasil mais populosas de acordo com IBGE (IBGE, 2022), o que nos faz pensar, obviamente, que por conta disso tem maior quantidade de IES, tendo em vista a maior demanda populacional. Isso nos leva a indagar se em termos percentuais há uma discrepância ou similaridade na quantidade de instituições superiores em nosso território, conforme as necessidades de cada região em número de habitantes. Para responder a tal indagação iremos ver a relação entre quantidade de IES e a população.
 
-Utilizamos a projeção do senso feita em 2022 para o ano de 2023 para alinhar com os dados das IES. Fizemos a
-razão quantidade de instituições pelo número de habitantes de cada região e, como o valor é muito pequeno, colocamos
-na relação para cada 100 mil habitantes, conforme exibe a Tabela 2.
+Utilizamos a projeção do senso feita em 2022 para o ano de 2023 para alinhar com os dados das IES. Fizemos a razão quantidade de instituições pelo número de habitantes de cada região e, como o valor é muito pequeno, colocamos na relação para cada 100 mil habitantes, conforme exibe a Tabela 2.
 
 ### Quantidade de instituições x populacão
 ```{r}
@@ -325,5 +319,100 @@ kable(
   format = "pipe" 
 )
 ```
+
+Observamos que a região Centro-Oeste, apesar de ser a segunda menor em número de IES, em termos proporcionais a população, é a que apresentar maior número proporcional de IES. O que vai de encontro aos valores absolutos. A região Sudeste que tem o maior percentual de IES,em termos proporcionais tem menos IES do que a própria região Sul. Neste sentido, a distribuição de IES no território nacional não privelegia Regiões mais populosas, conseguindo equilibrar a demandanda regional.
+
+### IES por Unidades Federativas (UFs)
+
+dda
+```{r}
+library(dplyr)
+
+tabela_est <- dados_ies %>%
+  # Agrupa os dados pela coluna 'UF'
+  group_by(UF) %>%
+  # Conta as ocorrências (Valores absolutos)
+  summarise(
+    `Val._absolutos` = n(),
+    .groups = 'drop' # Remove o agrupamento
+  ) %>%
+  # Calcula o total geral para normalização
+  mutate(
+    Total_Geral = sum(`Val._absolutos`),
+    # Calcula o percentual e arredonda para 2 casas decimais
+    Percentual = round((`Val._absolutos` / Total_Geral) * 100, 2)
+  ) %>%
+  # Remove a coluna auxiliar e seleciona a ordem final
+  select(-Total_Geral)
+
+# Exibe a tabela
+tabela_est
+```
+dd
+```{r}
+library(dplyr)
+
+# Ordena a tabela pela coluna 'Val._absolutos' de forma crescente
+tabela_est_ord <- tabela_est %>%
+  arrange(`Val._absolutos`)
+
+tabela_est_ord
 ```
 
+Quando analisamos o quantitativo de instituições por estado, temos um panorama não muito diferente (Figura 2). No entanto, com exceção de São Paulo e Minas Gerais, que são os estados mais populosos do Brasil (IBGE, 2022) e que possui o maior número de IES, o estado do Rio de Janeiro, por exemplo, que é o terceiro mais populoso, tem menos IES do que Paraná e Bahia. Na outra ponta, os estados menos populosos também segue com o menor número de IES, como Roraima, Amapá e Acre. 
+
+```{r}
+# Certifique-se de que os pacotes necessários estão carregados
+library(ggplot2)
+library(dplyr)
+library(forcats) # Pacote para manipular fatores, essencial para ordenar o eixo
+
+
+
+ggplot(tabela_est, aes(x = fct_reorder(UF, `Val._absolutos`), y = `Val._absolutos`)) +
+  geom_bar(stat = "identity", aes(fill = UF)) + # O ggplot2 gera 27 cores
+  labs(
+    title = 'Figra 2: Distribuição de Instituições por UF',
+    x = 'UF',
+    y = 'Quantidade de Instituições (Valores Absolutos)'
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  )
+```
+
+Para deixar mais ilustrativo a diferença grande do número de IES entre os estados, plotamos o “gráfico de Pareto” da Figura 3. O gráfico mostra a distribuição de instituições por UF, com os valores absolutos em ordem decrescente. A barra azul representa a quantidade de instituições em cada UF. A linha vermelha acompanha os valores absolutos, mostrando a tendência da distribuição.
+```{r}
+library(dplyr)
+library(ggplot2)
+library(forcats) # Necessário para fct_reorder
+
+# 1. Ordenar o data frame por 'Val._absolutos' de forma decrescente
+tabela_est_ord <- tabela_est %>%
+  arrange(desc(`Val._absolutos`))
+
+# 2. Criar o gráfico
+ggplot(tabela_est_ord, aes(x = fct_reorder(UF, `Val._absolutos`, .desc = TRUE))) +
+  
+  # Gráfico de barras (Valores Absolutos)
+  geom_bar(aes(y = `Val._absolutos`), stat = "identity", fill = 'blue') +
+  
+  # Gráfico de linha (Valores Absolutos)
+  geom_line(aes(y = `Val._absolutos`, group = 1), color = 'red', linewidth = 1) +
+  geom_point(aes(y = `Val._absolutos`), color = 'red', size = 3) +
+  
+  labs(
+    title = 'Figura 3: Distribuição de Instituições por UF((Gráfico de Pareto)',
+    x = 'UF',
+    y = 'Quantidade de Instituições (Valores Absolutos)'
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1) # Rotação do eixo X
+  )
+```
+Os primeiros UFs têm uma grande quantidade de instituições, indicando uma concentração de instituições nesses estados. Observe um declínio mais acentuado entre os três primeiros estados. Dai o declínio é mais gradual. Neste sentido, o gráfico de Pareto evidencia uma concentração das IES em poucos estados, como São Paulo e Minas Gerais. Os estados com maior número de IES estão no topo, enquanto os estados menos populosos, como Roraima e Amapá, possuem menor quantidade.
+
+## Instituições Públicas x Instituições Privadas
