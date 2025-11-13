@@ -1,0 +1,125 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Análise Exploratória de Dados da Educação Superior em R
+
+Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
+
+
+## Lendo os dados
+
+```{r}
+library(readxl)
+# DICIONAÁRIO DE DADOS
+disc_dados <- read_excel("/users/waldex/Documents/Github/Projeto_Ferramentas_Computacionais/microdados_censo_da_educacao_superior_2024/dicionário_dados_educação_superior.xlsx")
+#caminho_correto <- file.choose()
+#print(caminho_correto)
+```
+
+```{r}
+#CURSOS
+cadastro_cursos<-read.csv("/Users/waldex/Documents/GitHub/Projeto_Ferramentas_Computacionais/microdados_censo_da_educacao_superior_2024/MICRODADOS_CADASTRO_CURSOS_2024.CSV", sep=';', encoding='latin1')
+
+```
+
+```{r}
+#CURSOS
+microdados_ies<-read.csv("/Users/waldex/Documents/GitHub/Projeto_Ferramentas_Computacionais/microdados_censo_da_educacao_superior_2024/MICRODADOS_ED_SUP_IES_2024.CSV", sep=";", encoding = "latin1", header = TRUE)
+```
+
+```{r}
+
+POP_UF <- read_excel("/users/waldex/Documents/Github/Projeto_Ferramentas_Computacionais/dados_populacionais/POP_UF.xls")
+
+head(POP_UF)
+```
+
+### Verificando a quantidade de linhas 
+```{r}
+library(dplyr)
+
+dados_ies <- data.frame(
+  "REGIAO" = microdados_ies$NO_REGIAO_IES,
+  "ESTADO" = microdados_ies$NO_UF_IES,
+  "UF" = microdados_ies$SG_UF_IES,
+  "MUNICIPIO" = microdados_ies$NO_MUNICIPIO_IES,
+  
+  # Mapeamento: IN_CAPITAL_IES (usando ifelse)
+  "CAPITAL" = ifelse(microdados_ies$IN_CAPITAL_IES == 1, "Sim", "Não"),
+  
+  # Mapeamento: TP_REDE (usando ifelse)
+  "REDE" = ifelse(microdados_ies$TP_REDE == 1, "Pública", "Privada"),
+  
+  # Mapeamento: TP_ORGANIZACAO_ACADEMICA (usando case_when para mapeamento de múltiplos valores)
+  "NOME_CURSO" = case_when(
+    microdados_ies$TP_ORGANIZACAO_ACADEMICA == 1 ~ "Universidade",
+    microdados_ies$TP_ORGANIZACAO_ACADEMICA == 2 ~ "Centro Universitário",
+    microdados_ies$TP_ORGANIZACAO_ACADEMICA == 3 ~ "Faculdade",
+    microdados_ies$TP_ORGANIZACAO_ACADEMICA == 4 ~ "Instituto Federal",
+    microdados_ies$TP_ORGANIZACAO_ACADEMICA == 5 ~ "Centro Federal de Ed. Tecnológica",
+    TRUE ~ NA_character_ # Para qualquer outro valor, atribui NA (ou outro valor padrão)
+  ),
+  
+  # Mapeamento: TP_CATEGORIA_ADMINISTRATIVA (Equivalente à função lambda)
+  "ORG. ADM" = case_when(
+    microdados_ies$TP_CATEGORIA_ADMINISTRATIVA >= 4 ~ "Privada",
+    microdados_ies$TP_CATEGORIA_ADMINISTRATIVA == 1 ~ "Federal",
+    microdados_ies$TP_CATEGORIA_ADMINISTRATIVA == 2 ~ "Estadual",
+    microdados_ies$TP_CATEGORIA_ADMINISTRATIVA == 3 ~ "Municipal",
+    TRUE ~ NA_character_ # Caso contrário (ou valor não mapeado)
+  ),
+  
+  "NOME_IES" = microdados_ies$NO_IES,
+  "CO_IES" = microdados_ies$CO_IES,
+  "SIGLA_IES" = microdados_ies$SG_IES,
+  
+  # Colunas Quantitativas Simples
+  "QT_TEC_TOTAL" = microdados_ies$QT_TEC_TOTAL,
+  "QT_TEC_FUND_INCOMP_FEM" = microdados_ies$QT_TEC_FUNDAMENTAL_INCOMP_FEM,
+  "QT_TEC_FUND_INCOMP_MASC" = microdados_ies$QT_TEC_FUNDAMENTAL_INCOMP_MASC,
+  "QT_TEC_FUND_COMP_FEM" = microdados_ies$QT_TEC_FUNDAMENTAL_COMP_FEM,
+  "QT_TEC_FUND_COMP_MASC" = microdados_ies$QT_TEC_FUNDAMENTAL_COMP_MASC,
+  "QT_TEC_MEDIO_FEM" = microdados_ies$QT_TEC_MEDIO_FEM,
+  "QT_TEC_MEDIO_MASC" = microdados_ies$QT_TEC_MEDIO_MASC,
+  "QT_TEC_SUPERIOR_FEM" = microdados_ies$QT_TEC_SUPERIOR_FEM,
+  "QT_TEC_SUPERIOR_MASC" = microdados_ies$QT_TEC_SUPERIOR_MASC,
+  "QT_TEC_ESPECIALIZACAO_FEM" = microdados_ies$QT_TEC_ESPECIALIZACAO_FEM,
+  "QT_TEC_ESPECIALIZACAO_MASC" = microdados_ies$QT_TEC_ESPECIALIZACAO_MASC,
+  "QT_TEC_MESTRADO_FEM" = microdados_ies$QT_TEC_MESTRADO_FEM,
+  "QT_TEC_MESTRADO_MASC" = microdados_ies$QT_TEC_MESTRADO_MASC,
+  "QT_TEC_DOUTORADO_FEM" = microdados_ies$QT_TEC_DOUTORADO_FEM,
+  "QT_TEC_DOUTORADO_MASC" = microdados_ies$QT_TEC_DOUTORADO_MASC,
+  "QT_DOC_TOTAL" = microdados_ies$QT_DOC_TOTAL,
+  "QT_DOC_EXE" = microdados_ies$QT_DOC_EXE,
+  "QT_DOC_EX_FEM" = microdados_ies$QT_DOC_EX_FEMI, # Notei QT_DOC_EX_FEMI no seu código Python
+  "QT_DOC_EX_MASC" = microdados_ies$QT_DOC_EX_MASC,
+  "QT_DOC_EX_SEM_GRAD" = microdados_ies$QT_DOC_EX_SEM_GRAD,
+  "QT_DOC_EX_GRAD" = microdados_ies$QT_DOC_EX_GRAD,
+  "QT_DOC_EX_ESPEC" = microdados_ies$QT_DOC_EX_ESP, # Notei QT_DOC_EX_ESP no seu código Python
+  "QT_DOC_EX_MESTRE" = microdados_ies$QT_DOC_EX_MEST,
+  "QT_DOC_EX_DOUTOR" = microdados_ies$QT_DOC_EX_DOUT,
+  "QT_DOC_EX_0_29" = microdados_ies$QT_DOC_EX_0_29,
+  "QT_DOC_EX_30_34" = microdados_ies$QT_DOC_EX_30_34,
+  "QT_DOC_EX_35_39" = microdados_ies$QT_DOC_EX_35_39,
+  "QT_DOC_EX_40_44" = microdados_ies$QT_DOC_EX_40_44,
+  "QT_DOC_EX_45_49" = microdados_ies$QT_DOC_EX_45_49,
+  "QT_DOC_EX_50_54" = microdados_ies$QT_DOC_EX_50_54,
+  "QT_DOC_EX_55_59" = microdados_ies$QT_DOC_EX_55_59,
+  "QT_DOC_EX_60_MAIS" = microdados_ies$QT_DOC_EX_60_MAIS,
+  "QT_DOC_EX_BRANCA" = microdados_ies$QT_DOC_EX_BRANCA,
+  "QT_DOC_EX_PRETA" = microdados_ies$QT_DOC_EX_PRETA,
+  "QT_DOC_EX_PARDA" = microdados_ies$QT_DOC_EX_PARDA,
+  "QT_DOC_EX_AMARELA" = microdados_ies$QT_DOC_EX_AMARELA,
+  "QT_DOC_EX_INDIGENA" = microdados_ies$QT_DOC_EX_INDIGENA,
+  "QT_DOC_EX_COR_ND" = microdados_ies$QT_DOC_EX_COR_ND
+)
+```
+
+```{r}
+#dim(microdados_ies)
+#dim(dados_ies)
+head(dados_ies)
+```
+
