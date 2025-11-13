@@ -250,6 +250,8 @@ total <- sum(tabela_frequencia$Valores_absolutos)
 cat(paste("Total de instituições:", total, "\n\n"))
 ```
 Temos um total de 2561 Instituições de Ensino Superior (IES) no Brasil, segundo os dados disponibilizados. Destas a grande maioria, cerca de 42, 01% estão localizadas na região Sudeste. a região Norte é o que tem menos insitutições superiores, apenas 7,65%. Observe que se somarmos o quantitativo das regiões Norte, Sul e Centro-Oeste não atingimos o total de instituições da região sudeste.  O que mostra a grande discrepância do número de instituições de nível superior nas regiões do Brasil, conforme evidencia o gráfico seguinte.
+
+
 ```{r}
 library(knitr)
 # Exibindo a tabela  com os valores absoltuos e percentuais
@@ -260,4 +262,68 @@ kable(
 )
 ```
 
+```{r}
+library(ggplot2)
+
+# Definindo o vetor de cores (similar à paleta do Python)
+cores <- c('red', 'blue', 'green', 'purple', 'orange')
+
+# Criando o gráfico de barras de contagem
+ggplot(dados_ies, aes(x = REGIAO)) + # Define os dados e a variável X
+  geom_bar(fill = cores) + # Cria o gráfico de barras e aplica as cores
+  labs(
+    title = 'Figura 1: Quantitativo de IES por Região',
+    x = 'Região',
+    y = 'Quantidade de Instituições'
+  ) +
+  theme_minimal()
+```
+
+Sudeste e Nordeste são as duas regiões do Brasil mais populosas de acordo com IBGE (IBGE, 2022), o que nos faz
+pensar, obviamente, que por conta disso tem maior quantidade de IES, tendo em vista a maior demanda populacional.
+Isso nos leva a indagar se em termos percentuais há uma discrepância ou similaridade na quantidade de instituições
+superiores em nosso território, conforme as necessidades de cada região em número de habitantes. Para responder a tal
+indagação iremos ver a relação entre quantidade de IES e a população.
+
+Utilizamos a projeção do senso feita em 2022 para o ano de 2023 para alinhar com os dados das IES. Fizemos a
+razão quantidade de instituições pelo número de habitantes de cada região e, como o valor é muito pequeno, colocamos
+na relação para cada 100 mil habitantes, conforme exibe a Tabela 2.
+
+### Quantidade de instituições x populacão
+```{r}
+#Realizar a junção (merge) e manipulação
+library(dplyr) 
+pop_ies <- tabela_frequencia %>%
+  left_join(POP_UF, by = "REGIAO") %>%
+  select(-CO_REGIAO_IES) %>%
+  rename(
+    `Val._abs._IES` = Valores_absolutos, 
+    `Percentual_ies (%)` = `Percentual (%)`
+  )
+```
+```{r}
+#Cálculo de densidade por região
+pop_ies <- tabela_frequencia %>%
+  left_join(POP_UF, by = "REGIAO") %>%
+  select(-CO_REGIAO_IES) %>%
+  rename(
+    `Val._abs._IES` = Valores_absolutos, 
+    `Percentual_ies (%)` = `Percentual (%)`
+  ) %>%
+  mutate(
+    # Calcula IES por 100.000 habitantes
+    IES_por_100k = round((`Val._abs._IES` / POPULAÇÃO) * 100000, 2)
+  )
+
+pop_ies
+```
+```{r}
+library(knitr)
+kable(
+  pop_ies,
+  caption = "Tabela 2: Quantidade de  IES por 100k habitantes",
+  format = "pipe" 
+)
+```
+```
 
