@@ -45,7 +45,7 @@ POP_UF <- read_excel("/users/waldex/Documents/Github/Projeto_Ferramentas_Computa
 head(POP_UF)
 ```
 
-##2.1. Formando uma base de dados com as Instituções de Ensino Superior para filtrar informações de interesse
+## 2.1. Formando uma base de dados com as Instituções de Ensino Superior para filtrar informações de interesse
 ```{r}
 library(dplyr)
 
@@ -283,7 +283,7 @@ Sudeste e Nordeste são as duas regiões do Brasil mais populosas de acordo com 
 
 Utilizamos a projeção do senso feita em 2022 para o ano de 2023 para alinhar com os dados das IES. Fizemos a razão quantidade de instituições pelo número de habitantes de cada região e, como o valor é muito pequeno, colocamos na relação para cada 100 mil habitantes, conforme exibe a Tabela 2.
 
-##3.1.  Quantidade de instituições x populacão
+## 3.1.  Quantidade de instituições x populacão
 ```{r}
 #Realizar a junção (merge) e manipulação
 library(dplyr) 
@@ -322,9 +322,9 @@ kable(
 
 Observamos que a região Centro-Oeste, apesar de ser a segunda menor em número de IES, em termos proporcionais a população, é a que apresentar maior número proporcional de IES. O que vai de encontro aos valores absolutos. A região Sudeste que tem o maior percentual de IES,em termos proporcionais tem menos IES do que a própria região Sul. Neste sentido, a distribuição de IES no território nacional não privelegia Regiões mais populosas, conseguindo equilibrar a demandanda regional.
 
-###  IES por Unidades Federativas (UFs)
+###3.1.1  IES por Unidades Federativas (UFs)
 
-dda
+Abaixo exibimos o quantitativo absoluto e relativo das IES por Unidade Federativa
 ```{r}
 library(dplyr)
 
@@ -348,7 +348,7 @@ tabela_est <- dados_ies %>%
 # Exibe a tabela
 tabela_est
 ```
-dd
+
 ```{r}
 library(dplyr)
 
@@ -413,6 +413,7 @@ ggplot(tabela_est_ord, aes(x = fct_reorder(UF, `Val._absolutos`, .desc = TRUE)))
     axis.text.x = element_text(angle = 90, hjust = 1) # Rotação do eixo X
   )
 ```
+
 Os primeiros UFs têm uma grande quantidade de instituições, indicando uma concentração de instituições nesses estados. Observe um declínio mais acentuado entre os três primeiros estados. Dai o declínio é mais gradual. Neste sentido, o gráfico de Pareto evidencia uma concentração das IES em poucos estados, como São Paulo e Minas Gerais. Os estados com maior número de IES estão no topo, enquanto os estados menos populosos, como Roraima e Amapá, possuem menor quantidade.
 
 ## 3.2. Instituições Públicas x Instituições Privadas
@@ -486,10 +487,12 @@ ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
     x = 'Região',
     y = 'Quantidade de Instituições'
   ) +
-  scale_fill_discrete(name = "NOME_CURSO de Instituição") + # Define o título da legenda
+  scale_fill_discrete(name = "IES Pública ou privada") + # Define o título da legenda
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1) # Gira os rótulos do eixo X, se necessário
   )
 ```
+
+## 3.3. Em relação aos Curso
 

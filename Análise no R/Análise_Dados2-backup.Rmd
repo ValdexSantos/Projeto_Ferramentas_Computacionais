@@ -5,12 +5,12 @@ output: html_notebook
 
 ---
 
-# Introdução
+# 1. Introdução
 
 Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
 
 
-## Lendo os dados
+# 2. Lendo os dados
 Os comandos abaixo fará a leitura dos seguintes dados:
 
 * dicionáario de dados onde contem ...
@@ -45,7 +45,7 @@ POP_UF <- read_excel("/users/waldex/Documents/Github/Projeto_Ferramentas_Computa
 head(POP_UF)
 ```
 
-##Formando uma base de dados com as Instituções de Ensino Superior para filtrar informações de interesse
+##2.1. Formando uma base de dados com as Instituções de Ensino Superior para filtrar informações de interesse
 ```{r}
 library(dplyr)
 
@@ -131,7 +131,7 @@ dados_ies <- data.frame(
 #dim(dados_ies)
 head(dados_ies)
 ```
-##Formando uma base de dados com informações dos cursos para filtrar informações de interesse
+## 2.2. Formando uma base de dados com informações dos cursos para filtrar informações de interesse
 ```{r}
 library(dplyr)
 dados_cursos <- cadastro_cursos %>%
@@ -223,7 +223,7 @@ dados_cursos <- cadastro_cursos %>%
 head(dados_cursos)
 ```
 
-#Analisando o Panoram Geral das Instituições de ensino Supeior
+# 3. Analisando o panoram Geral das Instituições de ensino Supeior
 ```{r}
 tabela_frequencia <- dados_ies %>%
   # 1. Agrupando os dados pela coluna 'REGIAO'
@@ -283,7 +283,7 @@ Sudeste e Nordeste são as duas regiões do Brasil mais populosas de acordo com 
 
 Utilizamos a projeção do senso feita em 2022 para o ano de 2023 para alinhar com os dados das IES. Fizemos a razão quantidade de instituições pelo número de habitantes de cada região e, como o valor é muito pequeno, colocamos na relação para cada 100 mil habitantes, conforme exibe a Tabela 2.
 
-### Quantidade de instituições x populacão
+##3.1.  Quantidade de instituições x populacão
 ```{r}
 #Realizar a junção (merge) e manipulação
 library(dplyr) 
@@ -322,7 +322,7 @@ kable(
 
 Observamos que a região Centro-Oeste, apesar de ser a segunda menor em número de IES, em termos proporcionais a população, é a que apresentar maior número proporcional de IES. O que vai de encontro aos valores absolutos. A região Sudeste que tem o maior percentual de IES,em termos proporcionais tem menos IES do que a própria região Sul. Neste sentido, a distribuição de IES no território nacional não privelegia Regiões mais populosas, conseguindo equilibrar a demandanda regional.
 
-### IES por Unidades Federativas (UFs)
+###  IES por Unidades Federativas (UFs)
 
 dda
 ```{r}
@@ -415,4 +415,82 @@ ggplot(tabela_est_ord, aes(x = fct_reorder(UF, `Val._absolutos`, .desc = TRUE)))
 ```
 Os primeiros UFs têm uma grande quantidade de instituições, indicando uma concentração de instituições nesses estados. Observe um declínio mais acentuado entre os três primeiros estados. Dai o declínio é mais gradual. Neste sentido, o gráfico de Pareto evidencia uma concentração das IES em poucos estados, como São Paulo e Minas Gerais. Os estados com maior número de IES estão no topo, enquanto os estados menos populosos, como Roraima e Amapá, possuem menor quantidade.
 
-## Instituições Públicas x Instituições Privadas
+## 3.2. Instituições Públicas x Instituições Privadas
+Nesta seção iremos fazer um panorama entre Instituições públicas e privadas. Consoante a Tabela 3 o quantitativo de instituições privadas é muito superior ao quantitativo de instituições públicas (87,6% das IES no Brasil são privadas e 12,4% são públicas). Apesar da discrepância gigantesca entre o número de IES públicas e privadas em todo o país, se analisarmos por regição, há um equilíbrio na distribuição de IES privadas e, com exceção da região Sul e Centro-Oeste também há um certo equilíbrio na distribuição de IES públicas nas regiões. 
+
+```{r}
+library(dplyr)
+library(tidyr) # Necessário para pivot_wider, se quisermos reestruturar a tabela de forma robusta
+
+# 1. Cria a contagem dos valores absolutos e o total por REGIÃO
+regiao_REDE_inst <- dados_ies %>%
+  group_by(REGIAO, REDE) %>%
+  summarise(N = n(), .groups = 'drop') %>%
+  
+  # Transforma o formato longo (linhas) em formato largo (colunas)
+  pivot_wider(names_from = REDE, values_from = N, values_fill = 0) %>%
+  
+  # 2. Adiciona a linha de 'Total' por região
+  mutate(
+    Total = Pública + Privada
+  ) %>%
+  
+  # 3. Calcula os percentuais (substituindo o crosstab do Pandas)
+  mutate(
+    `%Pública` = round((Pública / Total) * 100, 1),
+    `%Privada` = round((Privada / Total) * 100, 1)
+  )
+
+# 4. Adiciona a linha de TOTAL GERAL (similar ao margins=True)
+# Calcula os totais de cada coluna (Pública, Privada, Total)
+total_geral <- regiao_REDE_inst %>%
+  summarise(
+    REGIAO = "Total",
+    Pública = sum(Pública),
+    Privada = sum(Privada),
+    Total = sum(Total),
+    `%Pública` = round((Pública / Total) * 100, 1),
+    `%Privada` = round((Privada / Total) * 100, 1)
+  )
+
+# 5. Combina a tabela de regiões com a linha de Total Geral
+regiao_REDE_inst <- bind_rows(regiao_REDE_inst, total_geral)
+
+# 6. Renomeia a tabela final para o nome que você pretendia
+regiao_NOME_CURSO_inst <- regiao_REDE_inst
+
+regiao_NOME_CURSO_inst
+
+library(knitr)
+kable(
+  regiao_NOME_CURSO_inst,
+  caption = "Tabela 3: Quantidade de  IES Pública X Privada por região",
+  format = "pipe" 
+)
+```
+A maior diferença entre o número de IES públicas e privadas está na região Sul (8,7% contra 91,3%). O Centro-oeste também tem uma diferença gritante (9,1% contra 90,9%). O Gráfico da Figura 4. exibe os valores absolutos por região, em que fica evidente que as regiões Sudeste e Nordeste o quantitativo de IES públicas e privadas são muito maiores que as demais. Mas como já mostramos na seção anterior, em termos proporcionais às suas populações há um equilíbrio de distribuição das IES.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+
+# 2. Criação do Gráfico de Barras Empilhadas
+ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
+  # geom_bar() calcula a contagem (quantidade) automaticamente.
+  # position = "stack" é o padrão, mas é explícito aqui.
+  geom_bar(position = "stack") + 
+  
+  labs(
+    title = 'Figura 4: Distribuição de Instituições por Região e Tipo de IES (Pública x Privada)',
+    x = 'Região',
+    y = 'Quantidade de Instituições'
+  ) +
+  scale_fill_discrete(name = "IES Pública ou privada") + # Define o título da legenda
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) # Gira os rótulos do eixo X, se necessário
+  )
+```
+
+## 3.3. Em relação aos Curso
