@@ -14,8 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Inicialmente iremos carregar os pacotes necessários e os dados que serão utilizados.
 
 ```{r}
-library(pacman)
-p_load('tidyverse')
+library('tidyverse', 'scales')
 
 dados <- read.csv2("/home/franciscoinacioo/Área de trabalho/POS -GRADUAÇÃO DOUTORADO/Disciplinas/Modelagem e ferramentas computacionais/Projeto/Projeto_Ferramentas_Computacionais/AnaliseMicroDadosR/microdados_censo_da_educacao_superior_2024/dados/MICRODADOS_ED_SUP_IES_2024.CSV")
 
@@ -23,7 +22,7 @@ dados <- read.csv2("/home/franciscoinacioo/Área de trabalho/POS -GRADUAÇÃO DO
 
 Análise do Perfil dos servidores (técnicos):                      
 - Quantidade total de servidores;             
-- Distribuição do gênero entre os servidores;
+- Distribuição do sexo entre os servidores;
 - Níveis de escolaridade entre os servidores.
 
 ```{r, echo=TRUE}
@@ -38,6 +37,89 @@ tecnicos %>% select(ends_with('_FEM')) %>% sum() # Total do sexo feminino
 tecnicos %>% select(ends_with('_MASC')) %>% sum() # Total do sexo masculino
 
 
+```
+
+```{r, echo=TRUE}
+
+# Método 1: Especificando explicitamente os nomes das colunas
+dados_escolaridade <- tecnicos %>%
+  summarise(
+    # Fundamental Incompleto
+    Fund_Incomp_FEM = sum(QT_TEC_FUNDAMENTAL_INCOMP_FEM),
+    Fund_Incomp_MASC = sum(QT_TEC_FUNDAMENTAL_INCOMP_MASC),
+    
+    # Fundamental Completo
+    Fund_Comp_FEM = sum(QT_TEC_FUNDAMENTAL_COMP_FEM),
+    Fund_Comp_MASC = sum(QT_TEC_FUNDAMENTAL_COMP_MASC),
+    
+    # Médio
+    Medio_FEM = sum(QT_TEC_MEDIO_FEM),
+    Medio_MASC = sum(QT_TEC_MEDIO_MASC),
+    
+    # Superior
+    Superior_FEM = sum(QT_TEC_SUPERIOR_FEM),
+    Superior_MASC = sum(QT_TEC_SUPERIOR_MASC),
+    
+    # Especialização
+    Especializacao_FEM = sum(QT_TEC_ESPECIALIZACAO_FEM),
+    Especializacao_MASC = sum(QT_TEC_ESPECIALIZACAO_MASC),
+    
+    # Mestrado
+    Mestrado_FEM = sum(QT_TEC_MESTRADO_FEM),
+    Mestrado_MASC = sum(QT_TEC_MESTRADO_MASC),
+    
+    # Doutorado
+    Doutorado_FEM = sum(QT_TEC_DOUTORADO_FEM),
+    Doutorado_MASC = sum(QT_TEC_DOUTORADO_MASC)
+  ) %>%
+  pivot_longer(
+    everything(),
+    names_to = "categoria",
+    values_to = "quantidade"
+  ) %>%
+  mutate(
+    # Extrair gênero (última parte após o último underscore) se FEM for true vai pro feminino, se não for masculino
+    sexo = ifelse(grepl("_FEM$", categoria), "Feminino", "Masculino"),
+    
+    # Extrair escolaridade, removendo FEM E MASC
+    escolaridade = gsub("_FEM$|_MASC$", "", categoria),
+    
+    # Ajustar os nomes das escolaridades
+    escolaridade = case_when(
+      escolaridade == "Fund_Incomp" ~ "Fund. Incompleto",
+      escolaridade == "Fund_Comp" ~ "Fund. Completo",
+      escolaridade == "Medio" ~ "Médio",
+      escolaridade == "Superior" ~ "Superior",
+      escolaridade == "Especializacao" ~ "Especialização",
+      escolaridade == "Mestrado" ~ "Mestrado",
+      escolaridade == "Doutorado" ~ "Doutorado"
+    ),
+    escolaridade = factor(escolaridade,
+                         levels = c("Fund. Incompleto", "Fund. Completo", "Médio", 
+                                  "Superior", "Especialização", "Mestrado", "Doutorado"))
+  ) %>%
+  select(escolaridade, sexo, quantidade)
+
+print(dados_escolaridade)
+
+
+```
+```{r}
+ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = sexo)) +
+  geom_col(position = "dodge", alpha = 0.9) +
+  geom_text(aes(label = scales::comma(quantidade)), 
+            position = position_dodge(width = 0.9),
+            vjust = -0.3, size = 3) +
+  labs(title = "Nível de Escolaridade dos técnicos por sexo",
+       subtitle = "Distribuição completa por nível de escolaridade",
+       x = "Nível de Escolaridade",
+       y = "Quantidade de Técnicos",
+       fill = "Sexo") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.1))) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right")
 ```
 
 
