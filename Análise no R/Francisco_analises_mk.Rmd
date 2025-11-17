@@ -22,7 +22,7 @@ dados <- read.csv2("/home/franciscoinacioo/Área de trabalho/POS -GRADUAÇÃO DO
 
 Análise do Perfil dos servidores (técnicos):                      
 - Quantidade total de servidores;             
-- Distribuição de gênero entre os servidores;
+- Distribuição de gênero entre os servidores;       
 - Níveis de escolaridade entre os servidores.
 
 ```{r, echo=TRUE}
@@ -33,6 +33,8 @@ is.na(tecnicos) %>% sum() # Verificar se há dados faltantes
 glimpse(tecnicos) # Verificar a estrutura
 
 total_servidores <- sum(tecnicos$QT_TEC_TOTAL)
+print((total_servidores))
+
 
 total_feminino <- tecnicos %>% 
   select(ends_with('_FEM')) %>% 
@@ -170,23 +172,22 @@ ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = genero))
         axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
                   )
 ```
-
-```{r}
+# Tabela de Distribuição geral dos técnicos por Níveis de escolaridade
+```{r, echo=TRUE, message=FALSE}
 library(knitr)
 library(kableExtra)
 
-dados_escolaridade %>% group_by(escolaridade)
+porcentagem_escolaridade_geral <- dados_escolaridade %>% group_by(escolaridade) %>%
+  summarise(Total = sum(quantidade)) %>% mutate(Porcentagem = round((Total / sum(Total)) * 100, 2))
 
-  kable(
-    format = "html",
-    caption = "Distribuição Geral por Nível de Escolaridade",
-    col.names = c("Nível de Escolaridade", "Quantidade", "Percentual", "Percentual Acumulado")
-  ) %>%
-  kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed"),
-    full_width = FALSE,
-    position = "left"
-  ) %>%
-  add_header_above(c(" " = 1, "Distribuição" = 3))
+
+porcentagem_escolaridade_geral %>%
+  kable(format = "html", 
+       caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>DISTRIBUIÇÃO GERAL POR NÍVEL DE ESCOLARIDADE</div>",
+          col.names = c("Escolaridade", "Total", "Porcentagem (%)")) %>%  column_spec(1:3, extra_css = "text-align: center;") %>%  kable_styling(
+          bootstrap_options = c("striped", "hover"),
+          full_width = FALSE
+        ) %>% 
+  row_spec(0, bold = TRUE, font_size = 16)
 ```
 
