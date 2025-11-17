@@ -1,0 +1,43 @@
+---
+title: "Francisco_analises"
+author: "Francisco Inácio Paiva Ferreira"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Perfil dos Funcionários das IES
+
+Inicialmente iremos carregar os pacotes necessários e os dados que serão utilizados.
+
+```{r}
+library(pacman)
+p_load('tidyverse')
+
+dados <- read.csv2("/home/franciscoinacioo/Área de trabalho/POS -GRADUAÇÃO DOUTORADO/Disciplinas/Modelagem e ferramentas computacionais/Projeto/Projeto_Ferramentas_Computacionais/AnaliseMicroDadosR/microdados_censo_da_educacao_superior_2024/dados/MICRODADOS_ED_SUP_IES_2024.CSV")
+
+```
+
+Análise do Perfil dos servidores (técnicos):                      
+- Quantidade total de servidores;             
+- Distribuição do gênero entre os servidores;
+- Níveis de escolaridade entre os servidores.
+
+```{r, echo=TRUE}
+tecnicos <- dados %>% select(starts_with('QT_TEC_'))
+
+is.na(tecnicos) %>% sum() # Verificar se há dados faltantes
+
+glimpse(tecnicos) # Verificar a estrutura
+
+sum(tecnicos$QT_TEC_TOTAL) # Total de servidores
+tecnicos %>% select(ends_with('_FEM')) %>% sum() # Total do sexo feminino
+tecnicos %>% select(ends_with('_MASC')) %>% sum() # Total do sexo masculino
+
+
+```
+
+
