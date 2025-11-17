@@ -22,7 +22,7 @@ dados <- read.csv2("/home/franciscoinacioo/Área de trabalho/POS -GRADUAÇÃO DO
 
 Análise do Perfil dos servidores (técnicos):                      
 - Quantidade total de servidores;             
-- Distribuição do sexo entre os servidores;
+- Distribuição de gênero entre os servidores;
 - Níveis de escolaridade entre os servidores.
 
 ```{r, echo=TRUE}
@@ -32,11 +32,48 @@ is.na(tecnicos) %>% sum() # Verificar se há dados faltantes
 
 glimpse(tecnicos) # Verificar a estrutura
 
-sum(tecnicos$QT_TEC_TOTAL) # Total de servidores
-tecnicos %>% select(ends_with('_FEM')) %>% sum() # Total do sexo feminino
-tecnicos %>% select(ends_with('_MASC')) %>% sum() # Total do sexo masculino
+total_servidores <- sum(tecnicos$QT_TEC_TOTAL)
+
+total_feminino <- tecnicos %>% 
+  select(ends_with('_FEM')) %>% 
+  as.matrix() %>% 
+  sum()
+
+total_masculino <- tecnicos %>% 
+  select(ends_with('_MASC')) %>% 
+  as.matrix() %>% 
+  sum()
+
+# Criando dataframe para o gráfico de pizza
+dados_totais <- data.frame(
+  genero = c("Feminino", "Masculino"),
+  quantidade = c(total_feminino, total_masculino)
+) %>%
+  mutate(
+    porcentagem = (quantidade / sum(quantidade)) * 100
+  )
+
+print(dados_totais)
 
 
+# Gráficos porcentagem de servidores de acordo com o gênero
+
+ggplot(dados_totais, aes(x = "", y = porcentagem, fill = genero)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(porcentagem, 1), "%")), 
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 6, fontface = "bold") +
+  labs(title = "Percentuais de gênero entre os servidores técnicos das IES",
+       fill = " Gênero") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.2)
+        
+        )
 ```
 
 ```{r, echo=TRUE}
@@ -79,7 +116,7 @@ dados_escolaridade <- tecnicos %>%
   ) %>%
   mutate(
     # Extrair gênero (última parte após o último underscore) se FEM for true vai pro feminino, se não for masculino
-    sexo = ifelse(grepl("_FEM$", categoria), "Feminino", "Masculino"),
+    genero = ifelse(grepl("_FEM$", categoria), "Feminino", "Masculino"),
     
     # Extrair escolaridade, removendo FEM E MASC
     escolaridade = gsub("_FEM$|_MASC$", "", categoria),
@@ -98,28 +135,58 @@ dados_escolaridade <- tecnicos %>%
                          levels = c("Fund. Incompleto", "Fund. Completo", "Médio", 
                                   "Superior", "Especialização", "Mestrado", "Doutorado"))
   ) %>%
-  select(escolaridade, sexo, quantidade)
+  select(escolaridade, genero, quantidade)
 
 print(dados_escolaridade)
 
+# Confirmando a quantidade de pessoa do gênero masculino e feminino
+# dados_escolaridade %>% group_by(genero) %>% summarise(
+#   n = sum(quantidade)
+# )
 
 ```
 ```{r}
-ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = sexo)) +
+ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = genero)) +
   geom_col(position = "dodge", alpha = 0.9) +
   geom_text(aes(label = scales::comma(quantidade)), 
             position = position_dodge(width = 0.9),
-            vjust = -0.3, size = 3) +
-  labs(title = "Nível de Escolaridade dos técnicos por sexo",
+            vjust = -0.2, size = 2.5) +
+  labs(title = "Nível de escolaridade dos servidores técnicos por gênero",
        subtitle = "Distribuição completa por nível de escolaridade",
        x = "Nível de Escolaridade",
        y = "Quantidade de Técnicos",
-       fill = "Sexo") +
+       fill = "Gênero") +
   scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.1))) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "right")
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.subtitle = element_text(size = 14, hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+                  )
 ```
 
+```{r}
+library(knitr)
+library(kableExtra)
+
+dados_escolaridade %>% group_by(escolaridade)
+
+  kable(
+    format = "html",
+    caption = "Distribuição Geral por Nível de Escolaridade",
+    col.names = c("Nível de Escolaridade", "Quantidade", "Percentual", "Percentual Acumulado")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    position = "left"
+  ) %>%
+  add_header_above(c(" " = 1, "Distribuição" = 3))
+```
 
