@@ -172,6 +172,9 @@ ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = genero))
         axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
                   )
 ```
+
+
+
 # Tabela de Distribuição geral dos técnicos por Níveis de escolaridade
 ```{r, echo=TRUE, message=FALSE}
 library(knitr)
@@ -190,4 +193,103 @@ porcentagem_escolaridade_geral %>%
         ) %>% 
   row_spec(0, bold = TRUE, font_size = 16)
 ```
+
+
+
+
+
+# Gráfico da distribuição geral dos tecnicos por nível de escolaridade
+
+```{r, echo=TRUE, message=FALSE}
+ggplot(porcentagem_escolaridade_geral, aes(x = escolaridade, y = Porcentagem, fill = escolaridade)) +
+  geom_col(position = "dodge", alpha = 0.9) +
+  labs(title = "Distribuição de nível de escolaridade entre os técnicos",
+       x = "Nível de Escolaridade",
+       y = "Porcentagem de Técnicos",
+       fill = 'Nível de escolaridade') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+                  )
+```
+
+
+
+
+# Quantidade de técnicos por instituição pública e privada
+```{r, echo=TRUE, message=FALSE}
+
+# Seleção das colunas necessárias
+tec_inst <- dados %>% select(TP_REDE, QT_TEC_TOTAL) %>% rename(total_de_tecnicos = QT_TEC_TOTAL, 
+                                                               tipo_de_rede = TP_REDE) 
+
+# Modificando o data frame
+tec_inst_g <- tec_inst  %>%
+  mutate(
+    tipo_de_rede = case_when(
+      tipo_de_rede == 1 ~ "Pública",
+      tipo_de_rede == 2 ~ "Privada",
+      TRUE ~ "Outro")) %>% group_by(tipo_de_rede) %>% 
+  summarise(total_de_tecnicos = sum(total_de_tecnicos)) 
+
+
+# Criando uma tabela com os valores totais
+tec_inst_g %>%  kable(format = "html", 
+       caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>DISTRIBUIÇÃO POR TIPO DE INSTITUIÇÃO</div>",
+          col.names = c("Tipo de instituição", "Total de técnicos")) %>%  column_spec(1:2, extra_css = "text-align: center;") %>%  kable_styling(
+          bootstrap_options = c("striped", "hover"),
+          full_width = FALSE
+        ) %>% 
+  row_spec(0, bold = TRUE, font_size = 16)
+
+
+
+ggplot(tec_inst_g, aes(x = tipo_de_rede, y = total_de_tecnicos, fill = tipo_de_rede)) +
+  geom_col() +
+  labs(title = "Distribuição dos técnicos por tipo de instituição",
+       x = "Tipo de instituição",
+       y = "Quantidade de Técnicos",
+       fill = "Tipo de instituição") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+    theme_classic() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.subtitle = element_text(size = 14, hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+                  )
+```
+
+
+
+# Perfil dos docentes
+
+```{r}
+# Separando as colunas com os dados dos docentes em um novo data frame
+
+docentes <-  dados %>% select(starts_with('QT_DOC'), 'TP_REDE') 
+
+# Verificar se há dados faltantes
+
+is.na(docentes) %>% sum()
+
+# Total de docentes nas IES
+
+print(sum(docentes$QT_DOC_TOTAL)) # Total
+
+print(sum(docentes$QT_DOC_EXE)) # Total em exercício
+
+
+```
+
 
