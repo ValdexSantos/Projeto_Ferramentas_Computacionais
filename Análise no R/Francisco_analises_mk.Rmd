@@ -274,7 +274,7 @@ ggplot(tec_inst_g, aes(x = tipo_de_rede, y = total_de_tecnicos, fill = tipo_de_r
 
 # Perfil dos docentes
 
-```{r}
+```{r, echo=TRUE, message=FALSE}
 # Separando as colunas com os dados dos docentes em um novo data frame
 
 docentes <-  dados %>% select(starts_with('QT_DOC'), 'TP_REDE') 
@@ -292,4 +292,280 @@ print(sum(docentes$QT_DOC_EXE)) # Total em exercício
 
 ```
 
+
+
+# Percentual da distribuição de gênero entre os docentes
+```{r, echo=TRUE, message=FALSE}
+total_docentes <- sum(docentes$QT_DOC_TOTAL)
+print((total_docentes))
+
+
+total_doc_feminino <- docentes %>% 
+  select('QT_DOC_EX_FEMI') %>% 
+  as.matrix() %>% 
+  sum()
+
+total_doc_masculino <- docentes %>% 
+  select(ends_with('QT_DOC_EX_MASC')) %>% 
+  as.matrix() %>% 
+  sum()
+
+# Criando dataframe para o gráfico de pizza
+genero_docentes <- data.frame(
+  genero = c("Feminino", "Masculino"),
+  quantidade = c(total_doc_feminino, total_doc_masculino)
+) %>%
+  mutate(porcentagem = (quantidade / total_docentes) * 100)
+
+print(genero_docentes)
+
+
+# Gráficos porcentagem de docentes de acordo com o gênero
+
+ggplot(genero_docentes, aes(x = "", y = porcentagem, fill = genero)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(porcentagem, 1), "%")), 
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 6, fontface = "bold") +
+  labs(title = "Percentual da distribuição de gênero entre os docentes",
+       fill = " Gênero") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.2)
+        )
+
+```
+
+
+# Distribuição do nível de escolaridade entre os docentes
+```{r, echo=TRUE, message=FALSE}
+níveis_docentes <- docentes %>% mutate(
+  tipo_instituição = case_when(
+    TP_REDE == 1 ~ 'Pública',
+    TP_REDE == 2 ~ 'Privada',
+  )
+) %>% group_by(tipo_instituição) %>% 
+  summarise( Sem_graduação = sum(QT_DOC_EX_SEM_GRAD),
+  Graduação = sum(QT_DOC_EX_GRAD),
+  Especialização = sum(QT_DOC_EX_ESP),
+  Mestrado = sum(QT_DOC_EX_MEST),
+  Doutorado = sum(QT_DOC_EX_DOUT),
+  Total_Geral = sum(Sem_graduação + Graduação + Especialização + Mestrado + Doutorado)
+)
+ 
+print(níveis_docentes)
+```
+
+
+
+
+
+
+
+```{r, echo=TRUE, message=FALSE}
+tabela_final <- níveis_docentes %>%
+  pivot_longer(
+    cols = c(Sem_graduação, Graduação, Especialização, Mestrado, Doutorado),
+    names_to = "Escolaridade",
+    values_to = "Quantidade"
+  ) %>%
+  group_by(Escolaridade) %>%
+  summarise(
+    `Total Geral` = sum(Quantidade),
+    `perc. total (%)` = round((`Total Geral` / sum(níveis_docentes$Total_Geral)) * 100, 1),
+    Pública = Quantidade[tipo_instituição == "Pública"],
+    Privada = Quantidade[tipo_instituição == "Privada"]
+  ) %>%
+  mutate(
+    `Perc Pública (%)` = round((Pública / (Pública + Privada)) * 100, 1),
+    `Perc Privada (%)` = round((Privada / (Pública + Privada)) * 100, 1),
+    Escolaridade = factor(Escolaridade,
+                         levels = c("Sem_graduação", "Graduação", "Especialização", 
+                                  "Mestrado", "Doutorado"),
+                         labels = c("Sem Graduação", "Graduação", "Especialização", 
+                                  "Mestrado", "Doutorado"))
+  ) %>%
+  arrange(Escolaridade) %>% 
+  select(Escolaridade, `Total Geral`, `perc. total (%)`, Pública, Privada, 
+         `Perc Pública (%)`, `Perc Privada (%)`) 
+
+  
+
+print(tabela_final)
+
+
+
+tabela_final %>%
+  mutate(
+    across(c(`Total Geral`, Pública, Privada), scales::comma),
+    across(c(`perc. total (%)`, `Perc Pública (%)`, `Perc Privada (%)`), 
+           ~ paste0(., "%"))
+  ) %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 16px; font-weight: bold;'>DISTRIBUIÇÃO DE ESCOLARIDADE DOS DOCENTES</div>",
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE
+  ) %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2:7, extra_css = "text-align: center;")
+```
+
+
+
+```{r}
+# Gráfico 1: Total geral por escolaridade
+ggplot(tabela_final, aes(x = Escolaridade, y = `Total Geral`)) +
+  geom_col(fill = "#4ECDC4", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(`Total Geral`), "\n(", `perc. total (%)`, ")")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Total de docentes por nível de escolaridade",
+    subtitle = "Valores absolutos e percentual do total entre parênteses",
+    x = "Nível de Escolaridade",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(labels = scales::comma, 
+                     limits = c(0, max(tabela_final$`Total Geral`) * 1.15)) +  # 15% acima do máximo
+  theme_classic() +
+  theme(
+        axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.subtitle = element_text(size = 14, hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+      )
+
+```
+
+
+
+
+
+
+# Grafico de comparação entre os níveis de escolaridade de docentes de instituições públicas e privadas
+```{r}
+# Gráfico 2 - Comparação Pública vs Privada
+dados_comp <- tabela_final %>%
+  select(Escolaridade, Pública, Privada) %>%
+  pivot_longer(cols = c(Pública, Privada), names_to = "Tipo", values_to = "Quantidade")
+
+ggplot(dados_comp, aes(x = Escolaridade, y = Quantidade, fill = Tipo)) +
+  geom_col(position = "dodge", alpha = 0.8) +
+  geom_text(aes(label = scales::comma(Quantidade)), 
+            position = position_dodge(width = 0.9), vjust = -0.3, size = 3) +
+  labs(title = "Comparação dos níveis de escolaridade entre \n docentes de instituições públicas e privadas", x = "", y = "Quantidade", fill = "Tipo de instituição") +
+  scale_fill_manual(values = c("Pública" = "#1F77B4", "Privada" = "#FF7F0E")) +
+  scale_y_continuous(
+    labels = scales::comma, 
+    expand = expansion(mult = c(0, 0.1))  
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "right",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+
+
+```
+
+
+
+
+# Faixa etária dos docentes
+```{r}
+faixa_etaria <- docentes %>% select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_40_44, QT_DOC_EX_45_49, QT_DOC_EX_50_54, QT_DOC_EX_55_59, QT_DOC_EX_60_MAIS)%>%
+  # Transformar colunas em linhas
+  pivot_longer(
+    cols = everything(),
+    names_to = "faixa_etaria_original",
+    values_to = "quantidade"
+  ) %>%
+  # Limpar e renomear as faixas etárias
+  mutate(
+    faixa_etaria = case_when(
+      faixa_etaria_original == "QT_DOC_EX_0_29" ~ "Até 29 anos",
+      faixa_etaria_original == "QT_DOC_EX_30_34" ~ "30 a 34 anos",
+      faixa_etaria_original == "QT_DOC_EX_40_44" ~ "40 a 44 anos",
+      faixa_etaria_original == "QT_DOC_EX_45_49" ~ "45 a 49 anos",
+      faixa_etaria_original == "QT_DOC_EX_50_54" ~ "50 a 54 anos",
+      faixa_etaria_original == "QT_DOC_EX_55_59" ~ "55 a 59 anos",
+      faixa_etaria_original == "QT_DOC_EX_60_MAIS" ~ "60 anos ou mais"
+    )
+  ) %>%
+  # Agrupar por faixa etária e somar
+  group_by(faixa_etaria) %>%
+  summarise(total_docentes = sum(quantidade, na.rm = TRUE)) %>%
+  # Ordenar de forma lógica
+  mutate(
+    faixa_etaria = factor(faixa_etaria,
+                         levels = c("Até 29 anos", "30 a 34 anos", 
+                                   "40 a 44 anos", "45 a 49 anos", 
+                                   "50 a 54 anos", "55 a 59 anos", 
+                                   "60 anos ou mais")),
+  percentual = round((total_docentes / sum(total_docentes)) * 100, 1)
+  ) %>%
+  arrange(faixa_etaria)
+
+print(faixa_etaria)
+
+
+
+
+```
+
+
+
+
+
+
+
+# Gŕafico faixa etária
+
+```{r}
+library(ggplot2)
+library(scales)
+
+ggplot(faixa_etaria, aes(x = faixa_etaria, y = total_docentes)) +
+  geom_col(fill = "#4ECDC4", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(total_docentes), "\n(", percentual, "%)")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "DISTRIBUIÇÃO DE DOCENTES POR FAIXA ETÁRIA",
+    x = "Faixa Etária",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(
+    labels = scales::comma,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  theme_classic() +
+ theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+```
 
