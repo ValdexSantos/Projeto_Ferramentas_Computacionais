@@ -15,18 +15,39 @@ dados_cursos <- read.csv("/Users/agsj2/OneDrive/Área de Trabalho/R/microdados_c
 
 
 cursos <- data.frame(
-  "Curso" = dados_cursos$NO_CINE_ROTULO
-)
+  "Curso" = dados_cursos$NO_CINE_ROTULO,
+  "Tipo_de_curso"= case_when(
+      dados_cursos$TP_GRAU_ACADEMICO == 1 ~ "Bacharelado",
+      dados_cursos$TP_GRAU_ACADEMICO == 2 ~ "Licenciatura",
+      dados_cursos$TP_GRAU_ACADEMICO == 3 ~ "Tecnólogo",
+      dados_cursos$TP_GRAU_ACADEMICO == 4 ~ "Bacharelado e Licenciatura",
+      TRUE ~ "Não se aplica" 
+    )
+  )
 
 #contando quantos tem de cada curso
 
 cursos_frequentes <- cursos %>%
   group_by(Curso) %>%
 summarise(
-  Valores_absolutos = n(),.groups = 'drop') %>%
-  mutate(Total_Geral = sum(Valores_absolutos),`Percentual (%)` = round((Valores_absolutos / Total_Geral) * 100, 2)
-  )
+  Quantidade_de_cursos = n(),.groups = 'drop') %>%
+  mutate(Total_Geral = sum(Quantidade_de_cursos),`Percentual (%)` = round((Quantidade_de_cursos / Total_Geral) * 100, 2)
+  ) %>%
+  select(-Total_Geral)
 
 ord_cursos <- cursos_frequentes %>%
-  arrange(desc(Valores_absolutos))
+  arrange(desc(Quantidade_de_cursos))
 print(ord_cursos)
+
+#Verificando o tipo de curso
+tipo_curso <- cursos %>%
+ group_by(Tipo_de_curso) %>%
+ summarise(
+   Grau_do_curso =n(),.groups = 'drop') %>%
+  mutate(Total_geral = sum(Grau_do_curso),`Percentual (%)` = round((Grau_do_curso / Total_geral) *100, 2)
+ ) %>%
+  select(-Total_geral)
+
+ord_tipo <- tipo_curso %>%
+  arrange(desc(Grau_do_curso))
+print(ord_tipo)
