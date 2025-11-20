@@ -543,13 +543,108 @@ print(faixa_etaria)
 library(ggplot2)
 library(scales)
 
-ggplot(faixa_etaria, aes(x = faixa_etaria, y = total_docentes)) +
-  geom_col(fill = "#4ECDC4", alpha = 0.8, width = 0.7) +
+ggplot(faixa_etaria, aes(x = faixa_etaria, y = total_docentes, fill = faixa_etaria)) +
+  geom_col(alpha = 0.8, width = 0.7) +
   geom_text(aes(label = paste0(scales::comma(total_docentes), "\n(", percentual, "%)")), 
             vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
   labs(
-    title = "DISTRIBUIÇÃO DE DOCENTES POR FAIXA ETÁRIA",
+    title = "Distribuição de docentes por faixa etária",
     x = "Faixa Etária",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(
+    labels = scales::comma,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  theme_classic() +
+ theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+```
+
+
+
+# Perfil étinico dos docentes
+
+
+```{r}
+etnia <- docentes %>% select(QT_DOC_EX_BRANCA, QT_DOC_EX_PRETA, QT_DOC_EX_PARDA, QT_DOC_EX_AMARELA, QT_DOC_EX_INDIGENA, QT_DOC_EX_COR_ND) %>%
+  # Transformar colunas em linhas
+  pivot_longer(
+    cols = everything(),
+    names_to = "Etnia",
+    values_to = "Quantidade"
+  ) %>%
+  # Limpar e renomear as faixas etárias
+  mutate(
+    Etnia = case_when(
+      Etnia == "QT_DOC_EX_BRANCA" ~ "Branca",
+      Etnia == "QT_DOC_EX_PRETA" ~ "Preta",
+      Etnia == "QT_DOC_EX_PARDA" ~ "Parda",
+      Etnia == "QT_DOC_EX_AMARELA" ~ "Amarela",
+      Etnia  == "QT_DOC_EX_INDIGENA" ~ "Indígena",
+      Etnia == "QT_DOC_EX_COR_ND" ~ "Não Declarada"
+    )
+  ) %>%
+  # Agrupar por faixa etária e somar
+  group_by(Etnia) %>%
+  summarise(total_docentes = sum(Quantidade, na.rm = TRUE)) %>%
+  # Ordenar de forma lógica
+  mutate(
+    Etnia = factor(Etnia,
+                         levels = c("Branca", "Preta", 
+                                   "Parda", "Amarela", 
+                                   "Indígena", "Não Declarada")),
+  percentual = round((total_docentes / sum(total_docentes)) * 100, 1)
+  ) %>%
+  arrange(Etnia)
+
+print(etnia)
+```
+```{r}
+etnia %>%
+  mutate(
+    total_docentes = scales::comma(total_docentes),
+    percentual = paste0(percentual, "%")
+  ) %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 16px; font-weight: bold;'>DISTRIBUIÇÃO DE DOCENTES POR ETNIA</div>",
+    col.names = c("Etnia", "Total de Docentes", "Percentual"),
+    align = c("c", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    font_size = 14,
+    position = "center"
+  ) %>%
+  column_spec(1, bold = TRUE, width = "35%") %>%
+  column_spec(2:3, width = "32.5%") %>%
+  row_spec(0, bold = TRUE, font_size = 15, background = "#f8f9fa") %>%
+  footnote(
+    general = "Fonte: Dados institucionais. Valores calculados com base na autodeclaração dos docentes.",
+    general_title = ""
+  )
+```
+
+
+```{r}
+ggplot(etnia, aes(x = Etnia, y = total_docentes)) +
+  geom_col(fill = "purple", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(total_docentes), "\n(", percentual, "%)")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Distribuição de docentes por Etnia",
+    x = "Etnia",
     y = "Total de Docentes"
   ) +
   scale_y_continuous(
