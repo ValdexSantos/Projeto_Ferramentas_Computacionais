@@ -59,10 +59,10 @@ POP_UF <- read_excel("~/FCM - Projeto Final/Projeto_Ferramentas_Computacionais/d
 # 3.7 Perfil dos Alunos
 
 # 3.7.1 Matrículas vs Concluintes 
-Objetivo: Comparar o número de alunos matriculados com o número de concluintes.
+O gráfico a baixo tem como objetivo comparar o número de alunos matriculados com o número de concluintes.
 
 ```{r fig.width=8, fig.height=5}
-library(scales)  # se ainda não tiver carregado
+library(scales) 
 
 matriculas_concluintes <- cadastro_cursos %>%
   summarise(
@@ -84,12 +84,13 @@ ggplot(matriculas_concluintes, aes(x = Categoria, y = Quantidade, fill = Categor
   theme_minimal() +
   theme(legend.position = "none")
 ```
+Em relação a quantidade de alunos que realizaram a matrícula em algum curso do Ensino Superior e aqueles que concluíram, podemos observar uma grande disparidade. Enquanto cerca de 10 milhões de estudantes ingressam, menos de 1,5 milhões concluem seus cursos. Isso sugere uma taxa significativa de evasão ou retenção no sistema educacional. A diferença aponta para desafios estruturais que impactam a permanência e o sucesso acadêmico dos alunos.
 
 # 3.7.2 Faixa Etária
-Objetivo: Mostrar a distribuição dos alunos por faixa etária. 
+Realizamos a análise a seguir com o intuito de mostrar a distribuição dos alunos por faixa etária. 
 
 ```{r fig.width=8, fig.height=5}
-library(scales)  # garante que a função label_comma esteja disponível
+library(scales) 
 
 faixa_etaria <- cadastro_cursos %>%
   summarise(
@@ -118,13 +119,13 @@ ggplot(faixa_etaria, aes(x = Faixa_Etaria, y = Quantidade, fill = Faixa_Etaria))
   theme(legend.position = "none")
 ```
 
-
+A maioria dos alunos que iniciam a graduação estão na faixa etária de 18 a 24 anos, ultrapassando 2 milhões. As faixas de 25 a 39 anos também apresentam números expressivos, indicando presença significativa de adultos jovens no sistema educacional. Já os extremos de 0-17 e acima de 50 anos, têm participação muito menor. Isso revela que o ensino superior é majoritariamente frequentado por jovens adultos.
 
 # 3.7.3 Etnia
-Objetivo: Apresentar a composição étnica dos alunos.
+A seguir a composição étnica dos alunos.
 
 ```{r fig.width=8, fig.height=5}
-library(scales)  # garante que label_comma esteja disponível
+library(scales)  
 
 etnia <- cadastro_cursos %>%
   summarise(
@@ -150,3 +151,4 @@ ggplot(etnia, aes(x = Etnia, y = Quantidade, fill = Etnia)) +
   theme_minimal() +
   theme(legend.position = "none")
 ```
+O gráfico revela que a maioria dos alunos se autodeclara branca, com mais de 2 milhões registrados. As categorias parda e sem informação também apresentam números expressivos, em torno de 1 milhão cada. Já as etnias preta, amarela e indígena têm participação significativamente menor. Essa distribuição aponta para desigualdades étnicas no acesso à educação, além de possíveis lacunas na coleta de dados devido a quantidade de alunos "sem informação" sobre sua etnia.
