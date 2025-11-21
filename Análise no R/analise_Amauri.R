@@ -6,9 +6,8 @@ library(tidyr)
 library(ggplot2)
 
 #Localização dos dados
-discionario_dados <- read_excel("/Users/agsj2/OneDrive/Área de Trabalho/R/microdados_censo_da_educacao_superior_2024/microdados_censo_da_educacao_superior_2024/Anexos/ANEXO I - Dicionário de Dados/dicionário_dados_educação_superior.xlsx")
-dados_IES <- read.csv("/Users/agsj2/OneDrive/Área de Trabalho/R/microdados_censo_da_educacao_superior_2024/microdados_censo_da_educacao_superior_2024/dados/MICRODADOS_ED_SUP_IES_2024.CSV", sep=';', encoding='latin1')
-dados_cursos <- read.csv("/Users/agsj2/OneDrive/Área de Trabalho/R/microdados_censo_da_educacao_superior_2024/microdados_censo_da_educacao_superior_2024/dados/MICRODADOS_CADASTRO_CURSOS_2024.CSV", sep=';', encoding='latin1')
+dicionario_dados <- read_excel("/microdados_censo_da_educacao_superior_2024/dicionario_dados_educacao_superior.xlsx")
+dados_cursos <- read.csv("/microdados_censo_da_educacao_superior_2024/MICRODADOS_CADASTRO_CURSOS_2024.CSV", sep=';', encoding='latin1')
 
 #Montagem do banco de dados analise 3.3
 dadosA <- data.frame(
