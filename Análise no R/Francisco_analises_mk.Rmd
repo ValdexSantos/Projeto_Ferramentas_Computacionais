@@ -78,6 +78,11 @@ ggplot(dados_totais, aes(x = "", y = porcentagem, fill = genero)) +
         )
 ```
 
+
+Do total de 350752 dos servidores técnicos das IES, 194439 (55,43%) são do gênero feminino e 156313 (44,56%) do gênero masculino, portanto existe um número significativo a mais de mulheres que homens.
+
+
+
 ```{r, echo=TRUE}
 
 # Método 1: Especificando explicitamente os nomes das colunas
@@ -175,6 +180,12 @@ ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = genero))
 
 
 
+No gráfico acima, onde temos a distribuição dos níveis de escolaridade dos técnicos por gênero, é possivel observar que o Ensino Médio é a formação predominante, sendo possível confirmar essa informação na tabela e no grafico abaixo de distribuição geral. 
+
+A partir da análise do gráfico acima, pode-se observar que as mulheres são maioria no ensino médio e nos níveis superiores, indicando que essas possuem um perfil de escolarização mais elevado que os homens. Os homens são maioria apenas nos níveis de ensino fundamental (incompleto e completo).
+
+
+
 # Tabela de Distribuição geral dos técnicos por Níveis de escolaridade
 ```{r, echo=TRUE, message=FALSE}
 library(knitr)
@@ -220,6 +231,11 @@ ggplot(porcentagem_escolaridade_geral, aes(x = escolaridade, y = Porcentagem, fi
 ```
 
 
+Com base nos dados da distribuição geral por nível de escolaridade, observa-se que a maior parte dos servidores técnicos possui formação de nível médio (26,32%), seguida de perto por Superior (25,54%) e Especialização (25,50%), formando juntos um contingente de 77,36% do total. Chama atenção a expressiva qualificação acadêmica do grupo, com 43,26% possuindo pós-graduação (Especialização, Mestrado ou Doutorado). Em contraste, apenas 4,88% estão nos níveis fundamental (incompleto ou completo), indicando um perfil educacional bastante elevado entre os técnicos.
+
+
+
+
 
 
 # Quantidade de técnicos por instituição pública e privada
@@ -236,40 +252,49 @@ tec_inst_g <- tec_inst  %>%
       tipo_de_rede == 1 ~ "Pública",
       tipo_de_rede == 2 ~ "Privada",
       TRUE ~ "Outro")) %>% group_by(tipo_de_rede) %>% 
-  summarise(total_de_tecnicos = sum(total_de_tecnicos)) 
+  summarise(total_de_tecnicos = sum(total_de_tecnicos)) %>%
+  mutate(porcentagem = round((total_de_tecnicos / sum(total_de_tecnicos)) * 100, 2))
 
 
 # Criando uma tabela com os valores totais
 tec_inst_g %>%  kable(format = "html", 
        caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>DISTRIBUIÇÃO POR TIPO DE INSTITUIÇÃO</div>",
-          col.names = c("Tipo de instituição", "Total de técnicos")) %>%  column_spec(1:2, extra_css = "text-align: center;") %>%  kable_styling(
+          col.names = c("Tipo de instituição", "Total de técnicos", "Porcentagem")) %>%  column_spec(1:3, extra_css = "text-align: center;") %>%  kable_styling(
           bootstrap_options = c("striped", "hover"),
           full_width = FALSE
-        ) %>% 
-  row_spec(0, bold = TRUE, font_size = 16)
+        ) %>%  row_spec(0, bold = TRUE, font_size = 16)
 
 
 
 ggplot(tec_inst_g, aes(x = tipo_de_rede, y = total_de_tecnicos, fill = tipo_de_rede)) +
   geom_col() +
+  geom_text(aes(label = paste0(scales::comma(total_de_tecnicos), "\n(", porcentagem, "%)")), 
+            vjust = -0.5, 
+            size = 4,
+            fontface = "bold") +
   labs(title = "Distribuição dos técnicos por tipo de instituição",
        x = "Tipo de instituição",
        y = "Quantidade de Técnicos",
        fill = "Tipo de instituição") +
   scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+   scale_y_continuous(limits = c(0, max(tec_inst_g$total_de_tecnicos) * 1.2))+
     theme_classic() +
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
         axis.text.y = element_text(size = 12),
         legend.position = "none",
         legend.text = element_text(size = 12),
         legend.title = element_text(size = 14, face = 'bold'),
-        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.6, margin = margin(t = 1, b = 30)),
+        plot.title.position = "plot",
         plot.subtitle = element_text(size = 14, hjust = 0.5),
         axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
-        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
                   )
 ```
 
+
+
+Apesar do número de instituições privadas serem superiores ao número de instituições públicas (2244 x 317), a distribuição dos técnicos é bastante equilibrada.
 
 
 # Perfil dos docentes
@@ -339,6 +364,11 @@ ggplot(genero_docentes, aes(x = "", y = porcentagem, fill = genero)) +
         )
 
 ```
+
+
+
+Os dados revelam que entre os docentes há 195.617 homens (52,2%) e 178.884 mulheres (47,8%), totalizando 374.501 profissionais. Esta distribuição mostra uma ligeira predominância masculina de 4,4 pontos percentuais no corpo docente.
+
 
 
 # Distribuição do nível de escolaridade entre os docentes
@@ -451,8 +481,6 @@ ggplot(tabela_final, aes(x = Escolaridade, y = `Total Geral`)) +
 
 
 
-
-
 # Grafico de comparação entre os níveis de escolaridade de docentes de instituições públicas e privadas
 ```{r}
 # Gráfico 2 - Comparação Pública vs Privada
@@ -487,6 +515,7 @@ ggplot(dados_comp, aes(x = Escolaridade, y = Quantidade, fill = Tipo)) +
 ```
 
 
+O perfil mostra uma docência altamente especializada, com 85,5% possuindo mestrado ou doutorado. Há uma divisão estratégica de qualificação: as instituições públicas concentram os maiores titulações (doutorado), enquanto as privadas predominam na especialização e mestrado, refletindo possíveis diferenças nas exigências e focos institucionais.
 
 
 # Faixa etária dos docentes
@@ -569,6 +598,12 @@ ggplot(faixa_etaria, aes(x = faixa_etaria, y = total_docentes, fill = faixa_etar
     axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
   )
 ```
+
+
+
+O perfil etário mostra uma docência predominantemente madura, com 84,1% dos profissionais acima dos 35 anos. A significativa presença de docentes acima dos 60 anos (16,1%) sugere tanto experiência consolidada quanto possíveis desafios futuros de renovação geracional. A baixa representatividade da faixa até 29 anos (4,1%) indica uma entrada mais tardia na carreira docente ou menor atratividade para os mais jovens.
+
+
 
 
 
@@ -663,4 +698,15 @@ ggplot(etnia, aes(x = Etnia, y = total_docentes)) +
     axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
   )
 ```
+
+
+
+
+
+Com base nos dados de distribuição étnico-racial dos docentes, observa-se uma significativa desproporção: profissionais brancos representam 61,9% do total, seguidos por pardos (19,9%) e pretos (3,2%), enquanto indígenas e amarelos têm representatividade abaixo de 1,5% somados. Chama atenção que 13,5% dos docentes não declararam etnia, um percentual que supera todas as minorias étnicas exceto pardos. Esses números evidenciam uma substancial sub-representação de docentes negros, indígenas e amarelos no conjunto do magistério, com predominância esmagadora de profissionais brancos.
+
+
+
+
+
 
