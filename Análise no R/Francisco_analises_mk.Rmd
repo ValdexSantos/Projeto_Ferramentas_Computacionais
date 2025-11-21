@@ -520,7 +520,7 @@ O perfil mostra uma docência altamente especializada, com 85,5% possuindo mestr
 
 # Faixa etária dos docentes
 ```{r}
-faixa_etaria <- docentes %>% select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_40_44, QT_DOC_EX_45_49, QT_DOC_EX_50_54, QT_DOC_EX_55_59, QT_DOC_EX_60_MAIS)%>%
+faixa_etaria <- docentes %>% select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_35_39, QT_DOC_EX_40_44, QT_DOC_EX_45_49, QT_DOC_EX_50_54, QT_DOC_EX_55_59, QT_DOC_EX_60_MAIS)%>%
   # Transformar colunas em linhas
   pivot_longer(
     cols = everything(),
@@ -532,6 +532,7 @@ faixa_etaria <- docentes %>% select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_4
     faixa_etaria = case_when(
       faixa_etaria_original == "QT_DOC_EX_0_29" ~ "Até 29 anos",
       faixa_etaria_original == "QT_DOC_EX_30_34" ~ "30 a 34 anos",
+      faixa_etaria_original == "QT_DOC_EX_35_39" ~ "35 a 39 anos",
       faixa_etaria_original == "QT_DOC_EX_40_44" ~ "40 a 44 anos",
       faixa_etaria_original == "QT_DOC_EX_45_49" ~ "45 a 49 anos",
       faixa_etaria_original == "QT_DOC_EX_50_54" ~ "50 a 54 anos",
@@ -545,7 +546,7 @@ faixa_etaria <- docentes %>% select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_4
   # Ordenar de forma lógica
   mutate(
     faixa_etaria = factor(faixa_etaria,
-                         levels = c("Até 29 anos", "30 a 34 anos", 
+                         levels = c("Até 29 anos", "30 a 34 anos", "35 a 39 anos", 
                                    "40 a 44 anos", "45 a 49 anos", 
                                    "50 a 54 anos", "55 a 59 anos", 
                                    "60 anos ou mais")),
