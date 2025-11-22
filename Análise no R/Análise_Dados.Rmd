@@ -263,6 +263,7 @@ tabela_frequencia <- dados_ies %>%
 total <- sum(tabela_frequencia$Valores_absolutos)
 cat(paste("Total de instituições:", total, "\n\n"))
 ```
+
 Temos um total de 2561 Instituições de Ensino Superior (IES) no Brasil, segundo os dados disponibilizados. Destas a grande maioria, cerca de 42, 01% estão localizadas na região Sudeste. a região Norte é o que tem menos insitutições superiores, apenas 7,65%. Observe que se somarmos o quantitativo das regiões Norte, Sul e Centro-Oeste não atingimos o total de instituições da região sudeste.  O que mostra a grande discrepância do número de instituições de nível superior nas regiões do Brasil, conforme evidencia o gráfico seguinte.
 
 
@@ -507,5 +508,208 @@ ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
   )
 ```
 
-## 3.3. Em relação aos Curso (Amauri)
+## 3.3. Em relação aos Curso
+
+### 3.3.1. Montagem do banco de dados que será utilizado nessas análises:
+```{r}
+quant_cursos <- data.frame(
+  "Curso" = cadastro_cursos$NO_CINE_ROTULO,
+  "Tipo_de_curso"= case_when(
+      cadastro_cursos$TP_GRAU_ACADEMICO == 1 ~ "Bacharelado",
+      cadastro_cursos$TP_GRAU_ACADEMICO == 2 ~ "Licenciatura",
+      cadastro_cursos$TP_GRAU_ACADEMICO == 3 ~ "Tecnólogo",
+            cadastro_cursos$TP_GRAU_ACADEMICO == 4 ~ "Bacharelado e Licenciatura",
+      TRUE ~ "Não se aplica" 
+    ),
+  "Quantidade_de_vagas"= cadastro_cursos$QT_VG_TOTAL,
+  "Numero_de_ingressantes"=cadastro_cursos$QT_ING,
+  "Numero_de_concluintes"=cadastro_cursos$QT_CONC
+  )
+```
+
+### 3.3.2. Cursos mais ofertados
+
+Vamos analisar quais são os 10 cursos que são oferecidos em maior quantidade, para isso fazemos um código que contabiliza quantas vezes cada curso é oferecido, organiza os cursos em ordem decrescente de quantidade e separa os 10 mais oferecidos.
+
+Em um panorama dos cursos superiores das IES, o curso mais presente é o de Pedagogia (21063 cursos), cerca de 2,92%, seguido de sistema de informação (2,82%) e adiministração (2,67%). A Tabela 4 exibe os 10 cursos em maior quantidade, com destaque para Sistemas de informação	na segunda posição. Outros curso não tão populares figuram também na lista, tais como Gestão Comercial e Gestão de Negócios.
+Gestão Financeira e Logística.
+
+```{r}
+cursos_frequentes <- quant_cursos %>%
+  group_by(Curso) %>%
+summarise(
+  Quantidade_de_cursos = n(),.groups = 'drop') %>%
+  mutate(Total_Geral = sum(Quantidade_de_cursos),`Percentual (%)` = round((Quantidade_de_cursos / Total_Geral) * 100, 2)
+  ) %>%
+  select(-Total_Geral)
+
+ord_cursos <- cursos_frequentes %>%
+  arrange(desc(Quantidade_de_cursos))%>%
+slice_head(n = 10)
+
+library(knitr)
+kable(
+  ord_cursos,
+  caption = "Tabela 4: Tabela de Cursos mais frequentes",
+  format = "pipe" 
+)
+
+```
+
+É possivel perceber que 7 dos 10 cursos mais oferecidos tem relação com a área empresarial.
+
+### 3.3.3. Tipos de cursos mais ofertados
+
+Ao análisarmos os tipos de graduação, o tecnólogo é consideravelmente mais oferecido do que os outros tipos, chegando a ser quase que metade dos cursos (47%), conforme Tabela 5. Uma maior quantidade de cursos da área empresarial e de cursos tecnólogos podem refletir uma demanda para uma formação mais rápida e direcionada para o ingresso no mercado de trabalho.
+
+```{r}
+library(dplyr)
+
+tipo_curso <- cadastro_cursos %>%
+  group_by(Tipo_de_curso) %>%
+  summarise(
+    Quant_grau = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Total = sum(Quant_grau),
+    Percentual = round((Quant_grau / Total) * 100, 2)
+  ) %>%
+  select(Tipo_de_curso, Quant_grau, Percentual)
+
+ord_tipo <- tipo_curso %>%
+  arrange(desc(Percentual))
+
+library(knitr)
+
+kable(
+  ord_tipo,
+  caption = "Tabela 5: Quantitativo e percentua de Cursos por tipo",
+  format = "pipe"
+)
+
+
+```
+
+Destaca-se que apenas 18,95% são cursos de Licenciatura. Isso pode se refletir pela baixa procura dos cursos de licenciatura devido à desvalorização da profissão docente. Alinhado a isso, temos o baixo número de vagas preenchidas e conclusões deste tipo de curso (Tabela 6)
+
+```{r}
+library(dplyr)
+library(knitr)
+
+vagasA <- dados_cursos %>%
+  group_by(TIPO) %>%
+  summarise(
+    vagas_total  = sum(QT_VAGAS, na.rm = TRUE),
+    ingressantes = sum(QT_ING,  na.rm = TRUE),
+    concluintes  = sum(QT_CONC, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    `%_vagas_preenchidas` = if_else(
+      vagas_total > 0,
+      round((ingressantes / vagas_total) * 100, 2),
+      NA_real_
+    ),
+    `%_de_concluintes` = if_else(
+      ingressantes > 0,
+      round((concluintes / ingressantes) * 100, 2),
+      NA_real_
+    )
+  ) %>%
+  arrange(desc(`%_vagas_preenchidas`))
+
+print(vagasA)
+
+# Opcional: tabela formatada
+kable(
+  vagasA,
+  caption = "Tabela 6: Vagas: totais e percentuais por tipo de curso",
+  format = "pipe"
+)
+
+```
+## 3.4. Análise descritiva de vagas ofertadas, matrículas e preenchidas
+
+A Tabela 7 exibe a quantidade de matrículas de vagas ofertadas nas IES por região, assim como a taxa de preenchimento, ilustrado também no gráfico da Figura 5a. Observa-se que a região Sudeste oferta mais vagas, tem mais ingressantes e concluintes, por consequência. A região centro-oeste é a que mais fica a desejar neste aspecto.
+```{r}
+library(dplyr)
+library(knitr)
+
+dados_regiao <- dados_cursos %>% 
+  filter(!is.na(NO_REGIAO), NO_REGIAO != "") %>% 
+  group_by(NO_REGIAO) %>% 
+  summarise(
+    total_ing   = sum(QT_ING,      na.rm = TRUE),
+    total_vagas = sum(QT_VG_TOTAL, na.rm = TRUE),
+    total_conc  = sum(QT_CONC,     na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    perc_ing   = round(total_ing   / sum(total_ing)   * 100, 2),
+    perc_vagas = round(total_vagas / sum(total_vagas) * 100, 2),
+    perc_conc  = round(total_conc  / sum(total_conc)  * 100, 2)
+  ) %>%
+  arrange(desc(total_vagas))
+
+kable(
+  dados_regiao,
+  caption = "Tabela 7: Distribuição de ingressantes, vagas ofertadas e concluintes por região",
+  format = "pipe"
+)
+
+```
+
+Outro dado importante de se analisar é o tipo de instituição que está oferecendo os cursos, se é publica ou privada (Tabela 8).
+
+```{r}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Tabela com ingressantes e concluintes por tipo de instituição
+ing_conc_inst <- dadosB %>%
+  filter(!is.na(tipo_de_inst), tipo_de_inst != "") %>%
+  group_by(tipo_de_inst) %>%
+  summarise(
+    total_ingressantes = sum(qnt_ingressantes, na.rm = TRUE),
+    total_concluintes  = sum(nmr_concluintes,   na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    total_geral_ing = sum(total_ingressantes),
+    total_geral_conc = sum(total_concluintes),
+    perc_ingressantes = round(total_ingressantes / total_geral_ing * 100, 2),
+    perc_concluintes  = round(total_concluintes  / total_geral_conc * 100, 2),
+    taxa_conclusao_pct = if_else(total_ingressantes > 0,
+                                 round(total_concluintes / total_ingressantes * 100, 2),
+                                 NA_real_)
+  ) %>%
+  select(tipo_de_inst,
+         total_ingressantes, perc_ingressantes,
+         total_concluintes,  perc_concluintes,
+         taxa_conclusao_pct) %>%
+  arrange(desc(total_ingressantes))
+
+# Impressão formatada
+kable(
+  ing_conc_inst,
+  caption = "Tabela 8: Ingressantes e Concluintes por tipo de instituição",
+  format = "html",
+  align = c("l", "r", "r", "r", "r", "r")
+) %>%
+  kable_classic(full_width = TRUE, html_font = "Arial") %>%
+  column_spec(1, width = "6cm") %>%
+  column_spec(2, width = "3.5cm") %>%
+  column_spec(3, width = "3.5cm") %>%
+  column_spec(4, width = ".53cm") %>%
+  column_spec(5, width = "3.5cm") %>%
+  column_spec(6, width = "3.5cm")
+```
+
+Como podemos observar há muito mais ofertas e portanto, muito mais ongressantes em instituições privada (88,52%) do que em instituiçõões públicas, assim como concluientes. No entato, a taxa de conclusão, ou seja, a razão entre ingressantes e concluintes é muito maior em instituções públicas. Em outras palavras os alunos que ingressam em IES publicam concluem mais, o que indica que a evasão ou abandono em IES privadas é maior.
+```{r}
+grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
+
+```
 
