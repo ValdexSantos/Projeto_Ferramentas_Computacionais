@@ -988,7 +988,256 @@ ggplot(tec_inst_g, aes(x = tipo_de_rede, y = total_de_tecnicos, fill = tipo_de_r
 
 ```
 
+## 3.6. Perfil dos docentes
+### 3.6.1. Percentual da distribuição de gênero entre os docentes
 
+Temos um total de 374.501 em exercícios nas IES brasileiras, incluindo públicas e privadas.
+
+```{r}
+library(dplyr)
+
+# Separando as colunas dos docentes
+docentes <- dados %>% select(starts_with('QT_DOC'), 'TP_REDE')
+
+# Verificar se há dados faltantes
+is.na(docentes) %>% sum()
+
+# Totais
+total_docentes       <- sum(docentes$QT_DOC_TOTAL, na.rm = TRUE)
+total_em_exercicio   <- sum(docentes$QT_DOC_EXE,   na.rm = TRUE)
+
+# Impressão com texto antes dos valores
+cat("Total de docentes cadastrados:", 
+    format(total_docentes, big.mark = ".", decimal.mark = ","), "\n")
+
+cat("Total de docentes em exercício:", 
+    format(total_em_exercicio, big.mark = ".", decimal.mark = ","), "\n")
+
+
+```
+
+Os dados da Figura 8, abaixo, revelam que entre os docentes há 195.617 homens (52,2%) e 178.884 mulheres (47,8%), totalizando 374.501 profissionais. Esta distribuição mostra uma ligeira predominância masculina de 4,4 pontos percentuais no corpo docente.
+
+```{r}
+total_docentes <- sum(docentes$QT_DOC_TOTAL)
+print((total_docentes))
+
+
+total_doc_feminino <- docentes %>% 
+  select('QT_DOC_EX_FEMI') %>% 
+  as.matrix() %>% 
+  sum()
+
+total_doc_masculino <- docentes %>% 
+  select(ends_with('QT_DOC_EX_MASC')) %>% 
+  as.matrix() %>% 
+  sum()
+
+# Criando dataframe para o gráfico de pizza
+genero_docentes <- data.frame(
+  genero = c("Feminino", "Masculino"),
+  quantidade = c(total_doc_feminino, total_doc_masculino)
+) %>%
+  mutate(porcentagem = (quantidade / total_docentes) * 100)
+
+print(genero_docentes)
+
+
+# Gráficos porcentagem de docentes de acordo com o gênero
+
+ggplot(genero_docentes, aes(x = "", y = porcentagem, fill = genero)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(porcentagem, 1), "%")), 
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 6, fontface = "bold") +
+  labs(title = "Figura 8: Percentual da distribuição de gênero entre os docentes",
+       fill = " Gênero") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.2)
+        )
+```
+### 3.6.2. Distribuição do nível de escolaridade entre os docentes
+
+A Tabela 10 evidencia que, surpreendentemente, ainda temos um quantitativo (muito pequeno, mas temos) de professores sem graduação nas IES, mas a maioria são doutores, o que reflete a busca por qualificação dos docentes, mas também políticas de qualificação, alinhados a possibilidade de afastamento para estudo, assim como necessidades para atuar em níveis de ensino mais avançados como cursos de mestrado e doutorado. 
+
+```{r, echo=TRUE, message=FALSE}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+
+titulacao_df <- docentes %>%
+  mutate(
+    tipo_instituicao = case_when(
+      TP_REDE == 1 ~ "Pública",
+      TP_REDE == 2 ~ "Privada",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(tipo_instituicao,
+         Sem_graduação  = QT_DOC_EX_SEM_GRAD,
+         Graduação      = QT_DOC_EX_GRAD,
+         Especialização = QT_DOC_EX_ESP,
+         Mestrado       = QT_DOC_EX_MEST,
+         Doutorado      = QT_DOC_EX_DOUT) %>%
+  pivot_longer(
+    cols = -tipo_instituicao,
+    names_to = "titulacao",
+    values_to = "quantidade"
+  ) %>%
+  group_by(titulacao) %>%
+  summarise(
+    Total_Geral      = sum(quantidade, na.rm = TRUE),
+    Publica          = sum(quantidade[tipo_instituicao == "Pública"], na.rm = TRUE),
+    Privada          = sum(quantidade[tipo_instituicao == "Privada"], na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Perc_Total   = round(Total_Geral / sum(Total_Geral) * 100, 2),
+    Perc_Publica = round(Publica      / Total_Geral * 100, 2),
+    Perc_Privada = round(Privada      / Total_Geral * 100, 2)
+  ) %>%
+  
+  select(
+    titulacao,
+    Total_Geral,
+    Perc_Total,
+    Publica,
+    Perc_Publica,
+    Privada,
+    Perc_Privada
+  )
+
+# Tabela formatada
+kable(
+  titulacao_df,
+  format = "html",
+  caption = "<b>Tabela 10:  Distribuição da Titulação dos Docentes por Tipo de Instituição</b>",
+  col.names = c(
+    "Titulação",
+    "Total Geral",
+    "% Total",
+    "IES Pública",
+    "% Pública",
+    "IES Privada",
+    "% Privada"
+  ),
+  align = "c"
+) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE,
+    position = "center",
+    font_size = 13
+  ) %>%
+  row_spec(0, bold = TRUE, font_size = 14)
+
+
+```
+
+Obviamente que estes são apenas alguns dos muitos motivos da busca por maior de qualificação entre docentes. Esta busca, notadamente,
+perpassa também pelo incentivo financeiro e de progressão dentro das IES, especialmente as públicas. A Figura 9 abaixo evidencia que 53% dos nossos docentes são doutores e 32% são mestres. Esta soma mostra a busca constante por qualificação e possivelmente incentivos pela mesma dentro da IES.
+
+```{r}
+# Gráfico 9: Total geral por escolaridade
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Usa titulacao_df gerada acima
+plot_df <- titulacao_df %>%
+  # garantir que existe e ordenar por Total_Geral desc
+  arrange(desc(Total_Geral)) %>%
+  mutate(
+    titulacao = factor(titulacao, levels = unique(titulacao)),
+    label = paste0(comma(Total_Geral), "\n(", Perc_Total, "%)")
+  )
+
+# Gráfico
+ggplot(plot_df, aes(x = titulacao, y = Total_Geral)) +
+  geom_col(fill = "#4ECDC4", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = label),
+            vjust = -0.3,
+            size = 4,
+            fontface = "bold",
+            lineheight = 0.8) +
+  labs(
+    title = "Figura 9: Total de docentes por nível de escolaridade",
+    subtitle = "Valores absolutos e percentual do total entre parênteses",
+    x = "Nível de Escolaridade",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(labels = comma,
+                     limits = c(0, max(plot_df$Total_Geral, na.rm = TRUE) * 1.15)) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none",
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+
+```
+
+ Apesar disso, a maior quantidade de mestres e  doutores atua em instituições particulares (Figura 0). Vale salientar, que pode haver interseção, quando se trata de docentes sem dedicação exclusiva em IES públicas.
+ 
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+
+# usa 'titulacao_df' gerada antes (colunas: titulacao, Total_Geral, Publica, Privada, Perc_...)
+# preparar dados para comparação Pública x Privada
+dados_comp <- titulacao_df %>%
+  select(titulacao, Publica, Privada) %>%
+  pivot_longer(cols = c(Publica, Privada), names_to = "Tipo", values_to = "Quantidade") %>%
+  arrange(desc(Quantidade)) %>%
+  # garantir ordem das categorias igual ao gráfico anterior (maior -> menor por Total_Geral)
+  mutate(titulacao = factor(titulacao, levels = unique(titulacao)))
+
+# limite y seguro
+y_max <- if (nrow(dados_comp) > 0) max(dados_comp$Quantidade, na.rm = TRUE) * 1.12 else 1
+
+# Gráfico adaptado
+ggplot(dados_comp, aes(x = titulacao, y = Quantidade, fill = Tipo)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.75, alpha = 0.85, color = "white") +
+  geom_text(aes(label = comma(Quantidade)),
+            position = position_dodge(width = 0.9),
+            vjust = -0.3,
+            size = 3.2,
+            fontface = "bold") +
+  labs(
+    title = "Figura 10: Níveis de titulação entre docentes de IES públicas e privadas",
+    x = "",
+    y = "Quantidade de Docentes",
+    fill = "Tipo de instituição"
+  ) +
+  scale_fill_manual(values = c("Publica" = "#1F77B4", "Privada" = "#FF7F0E"),
+                    labels = c("Pública", "Privada")) +
+  scale_y_continuous(labels = comma, limits = c(0, y_max)) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+    axis.text.y = element_text(size = 11),
+    legend.position = "right",
+    legend.text = element_text(size = 11),
+    legend.title = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    axis.title.y = element_text(face = "bold", size = 12)
+  )
+
+```
+ 
+### 3.6.3. Faixa etária dos docentes
 ```{r}
 grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
 
