@@ -85,7 +85,7 @@ dados_ies <- data.frame(
     TRUE ~ NA_character_ # Para qualquer outro valor, atribui NA (ou outro valor padrão)
   ),
   
-  # Mapeamento: TP_CATEGORIA_ADMINISTRATIVA (Equivalente à função lambda)
+  # Mapeamento: TP_CATEGORIA_ADMINISTRATIVA
   "ORG. ADM" = case_when(
     microdados_ies$TP_CATEGORIA_ADMINISTRATIVA >= 4 ~ "Privada",
     microdados_ies$TP_CATEGORIA_ADMINISTRATIVA == 1 ~ "Federal",
@@ -116,11 +116,11 @@ dados_ies <- data.frame(
   "QT_TEC_DOUTORADO_MASC" = microdados_ies$QT_TEC_DOUTORADO_MASC,
   "QT_DOC_TOTAL" = microdados_ies$QT_DOC_TOTAL,
   "QT_DOC_EXE" = microdados_ies$QT_DOC_EXE,
-  "QT_DOC_EX_FEM" = microdados_ies$QT_DOC_EX_FEMI, # Notei QT_DOC_EX_FEMI no seu código Python
+  "QT_DOC_EX_FEM" = microdados_ies$QT_DOC_EX_FEMI, 
   "QT_DOC_EX_MASC" = microdados_ies$QT_DOC_EX_MASC,
   "QT_DOC_EX_SEM_GRAD" = microdados_ies$QT_DOC_EX_SEM_GRAD,
   "QT_DOC_EX_GRAD" = microdados_ies$QT_DOC_EX_GRAD,
-  "QT_DOC_EX_ESPEC" = microdados_ies$QT_DOC_EX_ESP, # Notei QT_DOC_EX_ESP no seu código Python
+  "QT_DOC_EX_ESPEC" = microdados_ies$QT_DOC_EX_ESP, 
   "QT_DOC_EX_MESTRE" = microdados_ies$QT_DOC_EX_MEST,
   "QT_DOC_EX_DOUTOR" = microdados_ies$QT_DOC_EX_DOUT,
   "QT_DOC_EX_0_29" = microdados_ies$QT_DOC_EX_0_29,
@@ -150,7 +150,7 @@ head(dados_ies)
 library(dplyr)
 dados_cursos <- cadastro_cursos %>%
   transmute(
-    # Mapeamentos simples usando case_when (melhor que if/else aninhado)
+    # Mapeamentos simples usando case_when 
     REDE = case_when(
       TP_REDE == 1 ~ "Pública",
       TP_REDE == 2 ~ "Privada",
@@ -167,7 +167,7 @@ dados_cursos <- cadastro_cursos %>%
       TRUE ~ NA_character_
     ),
     
-    # Lógica condicional complexa para ORG. ADM
+    # Lógica condicional para ORG. ADM
     `ORG. ADM` = case_when(
       TP_CATEGORIA_ADMINISTRATIVA >= 4 ~ "Privada",
       TP_CATEGORIA_ADMINISTRATIVA == 1 ~ "Federal",
@@ -182,7 +182,7 @@ dados_cursos <- cadastro_cursos %>%
       TP_GRAU_ACADEMICO == 2 ~ "Licenciatura",
       TP_GRAU_ACADEMICO == 3 ~ "Tecnólogo",
       TP_GRAU_ACADEMICO == 4 ~ "Bacharelado e Licenciatura",
-      # A lógica original do Python mapeia qualquer outro valor para "Não se aplica"
+      
       TRUE ~ "Não se aplica" 
     ),
     
@@ -200,7 +200,7 @@ dados_cursos <- cadastro_cursos %>%
       TRUE ~ NA_character_
     ),
     
-    # Colunas que são apenas cópias diretas
+    
     CO_IES = CO_IES,
     CO_CURSO = CO_CURSO,
     NOME_CURSO = NO_CURSO,
@@ -210,7 +210,7 @@ dados_cursos <- cadastro_cursos %>%
     QT_ING_FEM = QT_ING_FEM,
     QT_ING_MASC = QT_ING_MASC,
     QT_ING_ENEM = QT_ING_ENEM,
-    `QT_ING_0-17` = `QT_ING_0_17`, # Aspas simples são necessárias no Python; no R, use backticks se o nome não for válido
+    `QT_ING_0-17` = `QT_ING_0_17`, 
     `QT_ING_18-24` = `QT_ING_18_24`,
     `QT_ING_25-29` = `QT_ING_25_29`,
     `QT_ING_30-34` = `QT_ING_30_34`,
@@ -279,12 +279,12 @@ kable(
 ```{r}
 library(ggplot2)
 
-# Definindo o vetor de cores (similar à paleta do Python)
+# Definindo o vetor de cores
 cores <- c('red', 'blue', 'green', 'purple', 'orange')
 
 # Criando o gráfico de barras de contagem
-ggplot(dados_ies, aes(x = REGIAO)) + # Define os dados e a variável X
-  geom_bar(fill = cores) + # Cria o gráfico de barras e aplica as cores
+ggplot(dados_ies, aes(x = REGIAO)) + 
+  geom_bar(fill = cores) + 
   labs(
     title = 'Figura 1: Quantitativo de IES por Região',
     x = 'Região',
@@ -376,10 +376,10 @@ tabela_est_ord
 Quando analisamos o quantitativo de instituições por estado, temos um panorama não muito diferente (Figura 2). No entanto, com exceção de São Paulo e Minas Gerais, que são os estados mais populosos do Brasil (IBGE, 2022) e que possui o maior número de IES, o estado do Rio de Janeiro, por exemplo, que é o terceiro mais populoso, tem menos IES do que Paraná e Bahia. Na outra ponta, os estados menos populosos também segue com o menor número de IES, como Roraima, Amapá e Acre. 
 
 ```{r}
-# Certifique-se de que os pacotes necessários estão carregados
+
 library(ggplot2)
 library(dplyr)
-library(forcats) # Pacote para manipular fatores, essencial para ordenar o eixo
+library(forcats) 
 
 
 
@@ -401,7 +401,7 @@ Para deixar mais ilustrativo a diferença grande do número de IES entre os esta
 ```{r}
 library(dplyr)
 library(ggplot2)
-library(forcats) # Necessário para fct_reorder
+library(forcats) 
 
 # 1. Ordenar o data frame por 'Val._absolutos' de forma decrescente
 tabela_est_ord <- tabela_est %>%
@@ -435,7 +435,7 @@ Nesta seção iremos fazer um panorama entre Instituições públicas e privadas
 
 ```{r}
 library(dplyr)
-library(tidyr) # Necessário para pivot_wider, se quisermos reestruturar a tabela de forma robusta
+library(tidyr) 
 
 # 1. Cria a contagem dos valores absolutos e o total por REGIÃO
 regiao_REDE_inst <- dados_ies %>%
@@ -471,7 +471,7 @@ total_geral <- regiao_REDE_inst %>%
 # 5. Combina a tabela de regiões com a linha de Total Geral
 regiao_REDE_inst <- bind_rows(regiao_REDE_inst, total_geral)
 
-# 6. Renomeia a tabela final para o nome que você pretendia
+# 6. Renomeia a tabela final para o nome 
 regiao_NOME_CURSO_inst <- regiao_REDE_inst
 
 regiao_NOME_CURSO_inst
@@ -492,8 +492,7 @@ library(ggplot2)
 
 # 2. Criação do Gráfico de Barras Empilhadas
 ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
-  # geom_bar() calcula a contagem (quantidade) automaticamente.
-  # position = "stack" é o padrão, mas é explícito aqui.
+  
   geom_bar(position = "stack") + 
   
   labs(
@@ -501,10 +500,10 @@ ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
     x = 'Região',
     y = 'Quantidade de Instituições'
   ) +
-  scale_fill_discrete(name = "IES Pública ou privada") + # Define o título da legenda
+  scale_fill_discrete(name = "IES Pública ou privada") + 
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1) # Gira os rótulos do eixo X, se necessário
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
 ```
 
