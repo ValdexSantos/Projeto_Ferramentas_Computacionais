@@ -32,7 +32,7 @@ Os comandos abaixo fará a leitura dos seguintes dados:
 + Cadastro das instituções de educação, abragendo Universidades e Institutos Federais
 +
 
-```{r}
+```{r,echo=FALSE}
 library(readxl)
 # DICIONAÁRIO DE DADOS
 disc_dados <- read_excel("/users/waldex/Documents/Github/Projeto_Ferramentas_Computacionais/microdados_censo_da_educacao_superior_2024/dicionário_dados_educação_superior.xlsx")
@@ -60,7 +60,7 @@ head(POP_UF)
 ```
 
 ## 2.1. Formando uma base de dados com as Instituções de Ensino Superior para filtrar informações de interesse
-```{r}
+```{r, echo=FALSE}
 library(dplyr)
 
 dados_ies <- data.frame(
@@ -595,40 +595,61 @@ Destaca-se que apenas 18,95% são cursos de Licenciatura. Isso pode se refletir 
 
 ```{r}
 library(dplyr)
-library(knitr)
 
+# Função para encontrar coluna por padrões prováveis
+achar_col <- function(df, pads) {
+  cols <- names(df)
+  encontrados <- grep(paste(pads, collapse = "|"), cols, ignore.case = TRUE, value = TRUE)
+  if (length(encontrados) == 0) {
+    return(NA_character_)
+  } else {
+    return(encontrados[1])  # escolhe o primeiro candidato
+  }
+}
+
+# identificar colunas no dataset
+col_vagas      <- achar_col(dados_cursos, c("^QT_VAGAS?$", "QT_VG", "VAGA"))
+col_ingressos  <- achar_col(dados_cursos, c("^QT_ING$", "QT_INGRE", "ING"))
+col_concl       <- achar_col(dados_cursos, c("^QT_CONC$", "QT_CONCLU", "CONC"))
+
+cat("Coluna vagas detectada: ", col_vagas, "\n")
+cat("Coluna ingressos detectada: ", col_ingressos, "\n")
+cat("Coluna concluintes detectada: ", col_concl, "\n")
+
+# Checagem: aborta se alguma não for encontrada
+if (any(is.na(c(col_vagas, col_ingressos, col_concl)))) {
+  stop("Não foi possível localizar automaticamente as colunas de vagas/ingressantes/concluintes.\nVerifique names(dados_cursos) e passe os nomes corretos.")
+}
+
+# Assegurar que a coluna de agrupamento existe 
+if (!"TIPO" %in% names(dados_cursos)) {
+  stop("Coluna 'Tipo_de_curso' não encontrada em dados_cursos. Use o nome correto (diferencia maiúsc/minúsc).")
+}
+
+# Agregação usando nomes detectados
 vagasA <- dados_cursos %>%
   group_by(TIPO) %>%
   summarise(
-    vagas_total  = sum(QT_VAGAS, na.rm = TRUE),
-    ingressantes = sum(QT_ING,  na.rm = TRUE),
-    concluintes  = sum(QT_CONC, na.rm = TRUE),
+    vagas_total  = sum(.data[[col_vagas]], na.rm = TRUE),
+    ingressantes = sum(.data[[col_ingressos]], na.rm = TRUE),
+    concluintes  = sum(.data[[col_concl]], na.rm = TRUE),
     .groups = "drop"
   ) %>%
   mutate(
-    `%_vagas_preenchidas` = if_else(
-      vagas_total > 0,
-      round((ingressantes / vagas_total) * 100, 2),
-      NA_real_
-    ),
-    `%_de_concluintes` = if_else(
-      ingressantes > 0,
-      round((concluintes / ingressantes) * 100, 2),
-      NA_real_
-    )
+    `%_vagas_preenchidas` = if_else(vagas_total > 0,
+                                    round((ingressantes / vagas_total) * 100, 2),
+                                    NA_real_),
+    `%_de_concluintes` = if_else(ingressantes > 0,
+                                round((concluintes / ingressantes) * 100, 2),
+                                NA_real_)
   ) %>%
   arrange(desc(`%_vagas_preenchidas`))
 
 print(vagasA)
 
-# Opcional: tabela formatada
-kable(
-  vagasA,
-  caption = "Tabela 6: Vagas: totais e percentuais por tipo de curso",
-  format = "pipe"
-)
 
 ```
+
 ## 3.4. Análise descritiva de vagas ofertadas, matrículas e preenchidas
 
 A Tabela 7 exibe a quantidade de matrículas de vagas ofertadas nas IES por região, assim como a taxa de preenchimento, ilustrado também no gráfico da Figura 5a. Observa-se que a região Sudeste oferta mais vagas, tem mais ingressantes e concluintes, por consequência. A região centro-oeste é a que mais fica a desejar neste aspecto.
@@ -707,7 +728,267 @@ kable(
   column_spec(6, width = "3.5cm")
 ```
 
-Como podemos observar há muito mais ofertas e portanto, muito mais ongressantes em instituições privada (88,52%) do que em instituiçõões públicas, assim como concluientes. No entato, a taxa de conclusão, ou seja, a razão entre ingressantes e concluintes é muito maior em instituções públicas. Em outras palavras os alunos que ingressam em IES publicam concluem mais, o que indica que a evasão ou abandono em IES privadas é maior.
+Como podemos observar há muito mais ofertas e portanto, muito mais ongressantes em instituições privada (88,52%) do que em instituições públicas, assim como concluientes. No entato, a taxa de conclusão, ou seja, a razão entre ingressantes e concluintes é muito maior em instituções públicas. Em outras palavras os alunos que ingressam em IES publicam concluem mais, o que indica que a evasão ou abandono em IES privadas é maior.
+
+## 3.5. Perfil dos Funcionários das IES
+
+Nesta seção iremos análise do Perfil dos servidores (técnicos):                      
+- Quantidade total de servidores;             
+- Distribuição de gênero entre os servidores;       
+- Níveis de escolaridade entre os servidores.
+### 3.5.1. Sexo e Escolaridade
+
+Do total de 350.752  funcionários técnicos, 194.439 são do sexo feminino (55,4%) e 156.313 do sexo masculino (44,6%), portanto existe um número significativo a mais de mulheres que de homens, conforme ilustra a Figura 5 abaixo.
+
+Ainda na Figura 7 (á direita) ilustramos graficamente a escolaridade dos técnicos, entre mulheres e homens.
+
+```{r}
+# --- seu gráfico ---
+ggplot(dados_plot, aes(x = "", y = porcentagem, fill = genero)) +
+  geom_col(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = paste0(round(porcentagem, 1), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 5, fontface = "bold") +
+  labs(title = "Figura 5: Percentuais de gênero entre os servidores técnicos das IES",
+       fill = "Gênero") +
+  theme_void()
+
+# --- impressão logo após o gráfico ---
+cat("\nResumo dos servidores técnicos:\n")
+cat("Feminino :", format(total_feminino,  big.mark = ".", decimal.mark = ","), "\n")
+cat("Masculino:", format(total_masculino, big.mark = ".", decimal.mark = ","), "\n")
+cat("Total    :", format(total_servidores, big.mark = ".", decimal.mark = ","), "\n")
+
+```
+
+Analisando o nível de escolaridade de maneira geral entre os técicos educacionais, a maioria dos técnicos tem Ensino médio (26,32%). O
+quantitativo dos que não tem nível médio (fundamental incompleto e fundamental completo) são maiores que o número de doutores (Tabela 9). Mas os maiores percentuais são dos que possuem ensino médio, superior e especialização. Este dado pode refletir o fato de que os concursos para tais cargos em geral exigem Ensino Superior, mas também é um dado importante para promoção de políticas públicas educacionais que incentivem a formação dos técnicos em programas de mestrado e doutorado. Como não há previsão de substitutos para cargos técnicos em processo de formação de mestrados e doutorados, isso dificulta a elevação de tais formações entre os técnicos.
+
+```{r}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Tabela agregada por nível geral de escolaridade
+porcentagem_escolaridade_geral <- dados_escolaridade %>%
+  group_by(escolaridade) %>%
+  summarise(
+    Total = sum(quantidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Porcentagem = round((Total / sum(Total)) * 100, 2)
+  )
+
+
+# Impressão elegante com kable + kableExtra
+porcentagem_escolaridade_geral %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>Tabela 9: DISTRIBUIÇÃO GERAL POR NÍVEL DE ESCOLARIDADE</div>",
+    col.names = c("Escolaridade", "Total", "Porcentagem (%)"),
+    align = c("c", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE,
+    position = "center",
+    font_size = 14
+  ) %>%
+  column_spec(1:3, width = "6cm") %>%
+  row_spec(0, bold = TRUE, font_size = 16)
+
+```
+
+Na Figura 6, percebemos que, em geral, o nível de escolaridade das mulheres, em relação ao total delas, é maior que dos homens. Quanto maior a qualificação, maior é a "vantagem" das mulheres servidores em relação aos homens. Isso significa que as mulheres procuram se qualificar mais nas funções de nível técnico dentro das IES.
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+
+
+col_esperadas <- c(
+  "QT_TEC_FUNDAMENTAL_INCOMP_FEM", "QT_TEC_FUNDAMENTAL_INCOMP_MASC",
+  "QT_TEC_FUNDAMENTAL_COMP_FEM",   "QT_TEC_FUNDAMENTAL_COMP_MASC",
+  "QT_TEC_MEDIO_FEM",             "QT_TEC_MEDIO_MASC",
+  "QT_TEC_SUPERIOR_FEM",          "QT_TEC_SUPERIOR_MASC",
+  "QT_TEC_ESPECIALIZACAO_FEM",    "QT_TEC_ESPECIALIZACAO_MASC",
+  "QT_TEC_MESTRADO_FEM",          "QT_TEC_MESTRADO_MASC",
+  "QT_TEC_DOUTORADO_FEM",         "QT_TEC_DOUTORADO_MASC"
+)
+
+faltantes <- setdiff(col_esperadas, names(tecnicos))
+if (length(faltantes) > 0) {
+  stop("Faltam colunas em 'tecnicos':\n", paste(faltantes, collapse = ", "))
+}
+
+# --- Agrupando e pivotendo ---
+dados_escolaridade <- tecnicos %>%
+  summarise(
+    Fund_Incomp_FEM      = sum(QT_TEC_FUNDAMENTAL_INCOMP_FEM, na.rm = TRUE),
+    Fund_Incomp_MASC     = sum(QT_TEC_FUNDAMENTAL_INCOMP_MASC, na.rm = TRUE),
+    Fund_Comp_FEM        = sum(QT_TEC_FUNDAMENTAL_COMP_FEM, na.rm = TRUE),
+    Fund_Comp_MASC       = sum(QT_TEC_FUNDAMENTAL_COMP_MASC, na.rm = TRUE),
+    Medio_FEM            = sum(QT_TEC_MEDIO_FEM, na.rm = TRUE),
+    Medio_MASC           = sum(QT_TEC_MEDIO_MASC, na.rm = TRUE),
+    Superior_FEM         = sum(QT_TEC_SUPERIOR_FEM, na.rm = TRUE),
+    Superior_MASC        = sum(QT_TEC_SUPERIOR_MASC, na.rm = TRUE),
+    Especializacao_FEM   = sum(QT_TEC_ESPECIALIZACAO_FEM, na.rm = TRUE),
+    Especializacao_MASC  = sum(QT_TEC_ESPECIALIZACAO_MASC, na.rm = TRUE),
+    Mestrado_FEM         = sum(QT_TEC_MESTRADO_FEM, na.rm = TRUE),
+    Mestrado_MASC        = sum(QT_TEC_MESTRADO_MASC, na.rm = TRUE),
+    Doutorado_FEM        = sum(QT_TEC_DOUTORADO_FEM, na.rm = TRUE),
+    Doutorado_MASC       = sum(QT_TEC_DOUTORADO_MASC, na.rm = TRUE)
+  ) %>%
+  pivot_longer(
+    everything(),
+    names_to = "categoria",
+    values_to = "quantidade"
+  ) %>%
+  mutate(
+    genero = ifelse(grepl("_FEM$", categoria), "Feminino", "Masculino"),
+    escolaridade = gsub("_FEM$|_MASC$", "", categoria),
+    escolaridade = case_when(
+      escolaridade == "Fund_Incomp"  ~ "Fund. Incompleto",
+      escolaridade == "Fund_Comp"    ~ "Fund. Completo",
+      escolaridade == "Medio"        ~ "Médio",
+      escolaridade == "Superior"     ~ "Superior",
+      escolaridade == "Especializacao" ~ "Especialização",
+      escolaridade == "Mestrado"     ~ "Mestrado",
+      escolaridade == "Doutorado"    ~ "Doutorado",
+      TRUE ~ escolaridade
+    ),
+    escolaridade = factor(escolaridade,
+                          levels = c("Fund. Incompleto", "Fund. Completo", "Médio",
+                                     "Superior", "Especialização", "Mestrado", "Doutorado"))
+  ) %>%
+  select(escolaridade, genero, quantidade)
+
+
+dados_escolaridade <- dados_escolaridade %>%
+  filter(!is.na(quantidade) & quantidade > 0)
+
+print(dados_escolaridade)
+
+# --- Gráfico de barras lado a lado  ---
+ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = genero)) +
+  geom_col(position = position_dodge(width = 0.9), alpha = 0.9, width = 0.8) +
+  geom_text(aes(label = comma(quantidade)),
+            position = position_dodge(width = 0.9),
+            vjust = -0.25, size = 3.2) +
+  labs(title = "Figura 6: Nível de escolaridade dos servidores técnicos por gênero",
+       subtitle = "Distribuição completa por nível de escolaridade",
+       x = "Nível de Escolaridade",
+       y = "Quantidade de Técnicos",
+       fill = "Gênero") +
+  scale_fill_manual(values = c("Feminino" = "#FF6B6B", "Masculino" = "#4ECDC4")) +
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.12))) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 11),
+    axis.text.y = element_text(size = 11),
+    legend.position = "right",
+    legend.text = element_text(size = 11),
+    legend.title = element_text(size = 12, face = 'bold'),
+    plot.title = element_text(size = 14, face = 'bold', hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 12, margin = margin(t = 8)),
+    axis.title.y = element_text(face = "bold", size = 12, margin = margin(r = 8))
+  )
+
+```
+A menor diferença está nos funcionários que tem doutorado. Nas IES, o número de homens que tem somente ensino fundamental completo ou incompleto é maior, nas demas qualificação a vantagem é sempre feminina, o que reforça nossa conclusão em relação à procura por qualificação se maior no sexo feminino.
+
+### 3.5.2. Quantidade de técnicos por instituição pública e privada
+
+Apesar do número de instituições privadas serem superiores ao número de instituições públicas (2244 x 317), a distribuição dos técnicos é bastante equilibrada (Figura 7), sendo 50,89% em ies públcias e 49,11% em IES privadas. Isto pode indicar que funcionários em IES privadas podem excecer diversas funções ou também retratar menos serviços oferecidos ou até mesmo reutilização de maão de obra.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(scales)
+
+# Preparar dados: mapear tipo de rede e agregar
+tec_inst_g <- dados %>%
+  # garantir que existe a coluna e renomear para nomes claros
+  transmute(
+    tipo_de_rede = TP_REDE,
+    total_de_tecnicos = QT_TEC_TOTAL
+  ) %>%
+  # mapear valores possíveis de TP_REDE (numérico ou string)
+  mutate(
+    tipo_de_rede = case_when(
+      tipo_de_rede %in% c(1, "1") ~ "Pública",
+      tipo_de_rede %in% c(2, "2") ~ "Privada",
+      TRUE ~ "Outro"
+    )
+  ) %>%
+  group_by(tipo_de_rede) %>%
+  summarise(
+    total_de_tecnicos = sum(as.numeric(total_de_tecnicos), na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # remover categorias sem técnicos (opcional)
+  filter(!is.na(total_de_tecnicos) & total_de_tecnicos > 0) %>%
+  arrange(desc(total_de_tecnicos)) %>%
+  mutate(
+    porcentagem = round(total_de_tecnicos / sum(total_de_tecnicos) * 100, 2),
+    # garantir a ordem no gráfico (maior -> menor)
+    tipo_de_rede = factor(tipo_de_rede, levels = unique(tipo_de_rede))
+  )
+
+# Imprimir tabela com kable
+tec_inst_g %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>DISTRIBUIÇÃO POR TIPO DE INSTITUIÇÃO</div>",
+    col.names = c("Tipo de instituição", "Total de técnicos", "Porcentagem (%)"),
+    align = c("l", "r", "r")
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE, position = "center", font_size = 14) %>%
+  column_spec(1, width = "6cm") %>%
+  column_spec(2:3, width = "3.5cm") %>%
+  row_spec(0, bold = TRUE, font_size = 14)
+
+# preparar paleta dinâmica (tanto cores quanto nomes)
+n_cats <- nrow(tec_inst_g)
+paleta_base <- c("#FF6B6B", "#4ECDC4", "#FFA600", "#7F7F7F")
+cores_usadas <- rep_len(paleta_base, n_cats)
+names(cores_usadas) <- levels(tec_inst_g$tipo_de_rede)
+
+# limite y seguro (caso apenas um valor ou todos zeros tratados acima)
+y_max <- ifelse(nrow(tec_inst_g) > 0, max(tec_inst_g$total_de_tecnicos, na.rm = TRUE) * 1.2, 1)
+
+# Gráfico
+ggplot(tec_inst_g, aes(x = tipo_de_rede, y = total_de_tecnicos, fill = tipo_de_rede)) +
+  geom_col(width = 0.6, color = "white") +
+  geom_text(aes(label = paste0(comma(total_de_tecnicos), "\n(", porcentagem, "%)")),
+            vjust = -0.25, size = 4, fontface = "bold") +
+  labs(title = "Figura 7: Distribuição dos técnicos por tipo de instituição",
+       x = "Tipo de instituição",
+       y = "Quantidade de Técnicos",
+       fill = NULL) +
+  scale_fill_manual(values = cores_usadas) +
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.06)), limits = c(0, y_max)) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+    axis.text.y = element_text(size = 11),
+    legend.position = "none",
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5, margin = margin(t = 5, b = 10)),
+    axis.title.x = element_text(face = "bold", size = 12, margin = margin(t = 8)),
+    axis.title.y = element_text(face = "bold", size = 12, margin = margin(r = 8))
+  )
+
+```
+
+
 ```{r}
 grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
 
