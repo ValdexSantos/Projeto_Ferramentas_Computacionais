@@ -493,4 +493,716 @@ ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
   )
 ```
 
-## 3.3. Em relação aos Curso
+## 3.3. Em relação aos Cursos
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 3.5 Perfil dos Funcionários das IES (Francisco)
+
+
+Obtendo os dados
+```{r}
+library('tidyverse', 'scales')
+
+dados <- read.csv2("/home/franciscoinacioo/Área de trabalho/POS -GRADUAÇÃO DOUTORADO/Disciplinas/Modelagem e ferramentas computacionais/Projeto/Projeto_Ferramentas_Computacionais/AnaliseMicroDadosR/microdados_censo_da_educacao_superior_2024/dados/MICRODADOS_ED_SUP_IES_2024.CSV")
+
+```
+
+
+
+Análise do Perfil dos servidores (técnicos):                      
+- Quantidade total de servidores;             
+- Distribuição de gênero entre os servidores;       
+- Níveis de escolaridade entre os servidores.
+
+```{r}
+tecnicos <- dados %>% select(starts_with('QT_TEC_'))
+
+is.na(tecnicos) %>% sum() # Verificar se há dados faltantes
+
+glimpse(tecnicos) # Verificar a estrutura
+
+total_servidores <- sum(tecnicos$QT_TEC_TOTAL)
+print((total_servidores))
+
+
+total_feminino <- tecnicos %>% 
+  select(ends_with('_FEM')) %>% 
+  as.matrix() %>% 
+  sum()
+
+total_masculino <- tecnicos %>% 
+  select(ends_with('_MASC')) %>% 
+  as.matrix() %>% 
+  sum()
+```
+
+
+
+```{r}
+ # Criando dataframe para o gráfico de pizza
+dados_totais <- data.frame(
+  genero = c("Feminino", "Masculino"),
+  quantidade = c(total_feminino, total_masculino)
+) %>%
+  mutate(
+    porcentagem = (quantidade / sum(quantidade)) * 100
+  )
+
+print(dados_totais)
+```
+
+
+```{r}
+ # Gráficos porcentagem de servidores de acordo com o gênero
+
+ggplot(dados_totais, aes(x = "", y = porcentagem, fill = genero)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(porcentagem, 1), "%")), 
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 6, fontface = "bold") +
+  labs(title = "Percentuais de gênero entre os servidores técnicos das IES",
+       fill = " Gênero") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.2)
+        
+        )
+```
+
+
+
+Do total de 350752 dos servidores técnicos das IES, 194439 (55,43%) são do gênero feminino e 156313 (44,56%) do gênero masculino, portanto existe um número significativo a mais de mulheres que homens.
+
+
+```{r}
+# Especificando explicitamente os nomes das colunas
+dados_escolaridade <- tecnicos %>%
+  summarise(
+    # Fundamental Incompleto
+    Fund_Incomp_FEM = sum(QT_TEC_FUNDAMENTAL_INCOMP_FEM),
+    Fund_Incomp_MASC = sum(QT_TEC_FUNDAMENTAL_INCOMP_MASC),
+    
+    # Fundamental Completo
+    Fund_Comp_FEM = sum(QT_TEC_FUNDAMENTAL_COMP_FEM),
+    Fund_Comp_MASC = sum(QT_TEC_FUNDAMENTAL_COMP_MASC),
+    
+    # Médio
+    Medio_FEM = sum(QT_TEC_MEDIO_FEM),
+    Medio_MASC = sum(QT_TEC_MEDIO_MASC),
+    
+    # Superior
+    Superior_FEM = sum(QT_TEC_SUPERIOR_FEM),
+    Superior_MASC = sum(QT_TEC_SUPERIOR_MASC),
+    
+    # Especialização
+    Especializacao_FEM = sum(QT_TEC_ESPECIALIZACAO_FEM),
+    Especializacao_MASC = sum(QT_TEC_ESPECIALIZACAO_MASC),
+    
+    # Mestrado
+    Mestrado_FEM = sum(QT_TEC_MESTRADO_FEM),
+    Mestrado_MASC = sum(QT_TEC_MESTRADO_MASC),
+    
+    # Doutorado
+    Doutorado_FEM = sum(QT_TEC_DOUTORADO_FEM),
+    Doutorado_MASC = sum(QT_TEC_DOUTORADO_MASC)
+  ) %>%
+  pivot_longer(
+    everything(),
+    names_to = "categoria",
+    values_to = "quantidade"
+  ) %>%
+  mutate(
+    # Extrair gênero (última parte após o último underscore) se FEM for true vai pro feminino, se não for masculino
+    genero = ifelse(grepl("_FEM$", categoria), "Feminino", "Masculino"),
+    
+    # Extrair escolaridade, removendo FEM E MASC
+    escolaridade = gsub("_FEM$|_MASC$", "", categoria),
+    
+    # Ajustar os nomes das escolaridades
+    escolaridade = case_when(
+      escolaridade == "Fund_Incomp" ~ "Fund. Incompleto",
+      escolaridade == "Fund_Comp" ~ "Fund. Completo",
+      escolaridade == "Medio" ~ "Médio",
+      escolaridade == "Superior" ~ "Superior",
+      escolaridade == "Especializacao" ~ "Especialização",
+      escolaridade == "Mestrado" ~ "Mestrado",
+      escolaridade == "Doutorado" ~ "Doutorado"
+    ),
+    escolaridade = factor(escolaridade,
+                         levels = c("Fund. Incompleto", "Fund. Completo", "Médio", 
+                                  "Superior", "Especialização", "Mestrado", "Doutorado"))
+  ) %>%
+  select(escolaridade, genero, quantidade)
+
+print(dados_escolaridade)
+```
+```{r}
+ggplot(dados_escolaridade, aes(x = escolaridade, y = quantidade, fill = genero)) +
+  geom_col(position = "dodge", alpha = 0.9) +
+  geom_text(aes(label = scales::comma(quantidade)), 
+            position = position_dodge(width = 0.9),
+            vjust = -0.2, size = 2.5) +
+  labs(title = "Nível de escolaridade dos servidores técnicos por gênero",
+       subtitle = "Distribuição completa por nível de escolaridade",
+       x = "Nível de Escolaridade",
+       y = "Quantidade de Técnicos",
+       fill = "Gênero") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.1))) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.subtitle = element_text(size = 14, hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+                  )
+```
+
+
+
+No gráfico acima, onde temos a distribuição dos níveis de escolaridade dos técnicos por gênero, é possivel observar que o Ensino Médio é a formação predominante, sendo possível confirmar essa informação na tabela e no grafico abaixo de distribuição geral. 
+
+A partir da análise do gráfico acima, pode-se observar que as mulheres são maioria no ensino médio e nos níveis superiores, indicando que essas possuem um perfil de escolarização mais elevado que os homens. Os homens são maioria apenas nos níveis de ensino fundamental (incompleto e completo).
+
+
+
+```{r}
+porcentagem_escolaridade_geral <- dados_escolaridade %>% group_by(escolaridade) %>%
+  summarise(Total = sum(quantidade)) %>% mutate(Porcentagem = round((Total / sum(Total)) * 100, 2))
+
+
+porcentagem_escolaridade_geral %>%
+  kable(format = "html", 
+       caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>DISTRIBUIÇÃO GERAL POR NÍVEL DE ESCOLARIDADE</div>",
+          col.names = c("Escolaridade", "Total", "Porcentagem (%)")) %>%  column_spec(1:3, extra_css = "text-align: center;") %>%  kable_styling(
+          bootstrap_options = c("striped", "hover"),
+          full_width = FALSE
+        ) %>% 
+  row_spec(0, bold = TRUE, font_size = 16)
+```
+
+
+
+
+
+
+# Gráfico da distribuição geral dos tecnicos por nível de escolaridade
+
+```{r}
+ggplot(porcentagem_escolaridade_geral, aes(x = escolaridade, y = Porcentagem, fill = escolaridade)) +
+  geom_col(position = "dodge", alpha = 0.9) +
+  labs(title = "Distribuição de nível de escolaridade entre os técnicos",
+       x = "Nível de Escolaridade",
+       y = "Porcentagem de Técnicos",
+       fill = 'Nível de escolaridade') +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+                  )
+```
+
+
+
+Com base nos dados da distribuição geral por nível de escolaridade, observa-se que a maior parte dos servidores técnicos possui formação de nível médio (26,32%), seguida de perto por Superior (25,54%) e Especialização (25,50%), formando juntos um contingente de 77,36% do total. Chama atenção a expressiva qualificação acadêmica do grupo, com 43,26% possuindo pós-graduação (Especialização, Mestrado ou Doutorado). Em contraste, apenas 4,88% estão nos níveis fundamental (incompleto ou completo), indicando um perfil educacional bastante elevado entre os técnicos.
+
+
+# Quantidade de técnicos por instituição pública e privada
+```{r, echo=TRUE, message=FALSE}
+
+# Seleção das colunas necessárias
+tec_inst <- dados %>% select(TP_REDE, QT_TEC_TOTAL) %>% rename(total_de_tecnicos = QT_TEC_TOTAL, 
+                                                               tipo_de_rede = TP_REDE) 
+
+# Modificando o data frame
+tec_inst_g <- tec_inst  %>%
+  mutate(
+    tipo_de_rede = case_when(
+      tipo_de_rede == 1 ~ "Pública",
+      tipo_de_rede == 2 ~ "Privada",
+      TRUE ~ "Outro")) %>% group_by(tipo_de_rede) %>% 
+  summarise(total_de_tecnicos = sum(total_de_tecnicos)) 
+
+
+# Criando uma tabela com os valores totais
+tec_inst_g %>%  kable(format = "html", 
+       caption = "<div style='text-align: center; font-size: 18px; font-weight: bold;'>DISTRIBUIÇÃO POR TIPO DE INSTITUIÇÃO</div>",
+          col.names = c("Tipo de instituição", "Total de técnicos")) %>%  column_spec(1:2, extra_css = "text-align: center;") %>%  kable_styling(
+          bootstrap_options = c("striped", "hover"),
+          full_width = FALSE
+        ) %>% 
+  row_spec(0, bold = TRUE, font_size = 16)
+
+
+
+ggplot(tec_inst_g, aes(x = tipo_de_rede, y = total_de_tecnicos, fill = tipo_de_rede)) +
+  geom_col() +
+  labs(title = "Distribuição dos técnicos por tipo de instituição",
+       x = "Tipo de instituição",
+       y = "Quantidade de Técnicos",
+       fill = "Tipo de instituição") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+    theme_classic() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.subtitle = element_text(size = 14, hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+                  )
+```
+
+
+
+
+Apesar do número de instituições privadas serem superiores ao número de instituições públicas (2244 x 317), a distribuição dos técnicos é bastante equilibrada.
+
+
+
+
+# Perfil dos docentes
+
+```{r, echo=TRUE, message=FALSE}
+# Separando as colunas com os dados dos docentes em um novo data frame
+
+docentes <-  dados %>% select(starts_with('QT_DOC'), 'TP_REDE') 
+
+# Verificar se há dados faltantes
+
+is.na(docentes) %>% sum()
+
+# Total de docentes nas IES
+
+print(sum(docentes$QT_DOC_TOTAL)) # Total
+
+print(sum(docentes$QT_DOC_EXE)) # Total em exercício
+
+
+```
+
+
+
+
+# Percentual da distribuição de gênero entre os docentes
+```{r, echo=TRUE, message=FALSE}
+total_docentes <- sum(docentes$QT_DOC_TOTAL)
+print((total_docentes))
+
+
+total_doc_feminino <- docentes %>% 
+  select('QT_DOC_EX_FEMI') %>% 
+  as.matrix() %>% 
+  sum()
+
+total_doc_masculino <- docentes %>% 
+  select(ends_with('QT_DOC_EX_MASC')) %>% 
+  as.matrix() %>% 
+  sum()
+
+# Criando dataframe para o gráfico de pizza
+genero_docentes <- data.frame(
+  genero = c("Feminino", "Masculino"),
+  quantidade = c(total_doc_feminino, total_doc_masculino)
+) %>%
+  mutate(porcentagem = (quantidade / total_docentes) * 100)
+
+print(genero_docentes)
+
+
+# Gráficos porcentagem de docentes de acordo com o gênero
+
+ggplot(genero_docentes, aes(x = "", y = porcentagem, fill = genero)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round(porcentagem, 1), "%")), 
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 6, fontface = "bold") +
+  labs(title = "Percentual da distribuição de gênero entre os docentes",
+       fill = " Gênero") +
+  scale_fill_manual(values = c("#FF6B6B", "#4ECDC4")) +
+  theme_void() +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.2)
+        )
+
+```
+
+
+Os dados revelam que entre os docentes há 195.617 homens (52,2%) e 178.884 mulheres (47,8%), totalizando 374.501 profissionais. Esta distribuição mostra uma ligeira predominância masculina de 4,4 pontos percentuais no corpo docente.
+
+
+
+# Distribuição do nível de escolaridade entre os docentes
+```{r, echo=TRUE, message=FALSE}
+níveis_docentes <- docentes %>% mutate(
+  tipo_instituição = case_when(
+    TP_REDE == 1 ~ 'Pública',
+    TP_REDE == 2 ~ 'Privada',
+  )
+) %>% group_by(tipo_instituição) %>% 
+  summarise( Sem_graduação = sum(QT_DOC_EX_SEM_GRAD),
+  Graduação = sum(QT_DOC_EX_GRAD),
+  Especialização = sum(QT_DOC_EX_ESP),
+  Mestrado = sum(QT_DOC_EX_MEST),
+  Doutorado = sum(QT_DOC_EX_DOUT),
+  Total_Geral = sum(Sem_graduação + Graduação + Especialização + Mestrado + Doutorado)
+)
+ 
+print(níveis_docentes)
+```
+
+
+
+
+
+
+
+```{r, echo=TRUE, message=FALSE}
+tabela_final <- níveis_docentes %>%
+  pivot_longer(
+    cols = c(Sem_graduação, Graduação, Especialização, Mestrado, Doutorado),
+    names_to = "Escolaridade",
+    values_to = "Quantidade"
+  ) %>%
+  group_by(Escolaridade) %>%
+  summarise(
+    `Total Geral` = sum(Quantidade),
+    `perc. total (%)` = round((`Total Geral` / sum(níveis_docentes$Total_Geral)) * 100, 1),
+    Pública = Quantidade[tipo_instituição == "Pública"],
+    Privada = Quantidade[tipo_instituição == "Privada"]
+  ) %>%
+  mutate(
+    `Perc Pública (%)` = round((Pública / (Pública + Privada)) * 100, 1),
+    `Perc Privada (%)` = round((Privada / (Pública + Privada)) * 100, 1),
+    Escolaridade = factor(Escolaridade,
+                         levels = c("Sem_graduação", "Graduação", "Especialização", 
+                                  "Mestrado", "Doutorado"),
+                         labels = c("Sem Graduação", "Graduação", "Especialização", 
+                                  "Mestrado", "Doutorado"))
+  ) %>%
+  arrange(Escolaridade) %>% 
+  select(Escolaridade, `Total Geral`, `perc. total (%)`, Pública, Privada, 
+         `Perc Pública (%)`, `Perc Privada (%)`) 
+
+  
+
+print(tabela_final)
+
+
+
+tabela_final %>%
+  mutate(
+    across(c(`Total Geral`, Pública, Privada), scales::comma),
+    across(c(`perc. total (%)`, `Perc Pública (%)`, `Perc Privada (%)`), 
+           ~ paste0(., "%"))
+  ) %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 16px; font-weight: bold;'>DISTRIBUIÇÃO DE ESCOLARIDADE DOS DOCENTES</div>",
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover"),
+    full_width = FALSE
+  ) %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2:7, extra_css = "text-align: center;")
+```
+
+
+
+
+
+```{r}
+# Gráfico 1: Total geral por escolaridade
+ggplot(tabela_final, aes(x = Escolaridade, y = `Total Geral`)) +
+  geom_col(fill = "#4ECDC4", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(`Total Geral`), "\n(", `perc. total (%)`, ")")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Total de docentes por nível de escolaridade",
+    subtitle = "Valores absolutos e percentual do total entre parênteses",
+    x = "Nível de Escolaridade",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(labels = scales::comma, 
+                     limits = c(0, max(tabela_final$`Total Geral`) * 1.15)) +  # 15% acima do máximo
+  theme_classic() +
+  theme(
+        axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14, face = 'bold'),
+        plot.title = element_text(size = 16, face = 'bold', hjust = 0.5),
+        plot.subtitle = element_text(size = 14, hjust = 0.5),
+        axis.title.x = element_text(face = "bold", size = 14, margin = margin(t = 10)),
+        axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+      )
+
+```
+
+
+
+
+
+
+# Grafico de comparação entre os níveis de escolaridade de docentes de instituições públicas e privadas
+```{r}
+# Gráfico 2 - Comparação Pública vs Privada
+dados_comp <- tabela_final %>%
+  select(Escolaridade, Pública, Privada) %>%
+  pivot_longer(cols = c(Pública, Privada), names_to = "Tipo", values_to = "Quantidade")
+
+ggplot(dados_comp, aes(x = Escolaridade, y = Quantidade, fill = Tipo)) +
+  geom_col(position = "dodge", alpha = 0.8) +
+  geom_text(aes(label = scales::comma(Quantidade)), 
+            position = position_dodge(width = 0.9), vjust = -0.3, size = 3) +
+  labs(title = "Comparação dos níveis de escolaridade entre \n docentes de instituições públicas e privadas", x = "", y = "Quantidade", fill = "Tipo de instituição") +
+  scale_fill_manual(values = c("Pública" = "#1F77B4", "Privada" = "#FF7F0E")) +
+  scale_y_continuous(
+    labels = scales::comma, 
+    expand = expansion(mult = c(0, 0.1))  
+  ) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "right",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+
+
+```
+
+
+
+
+
+O perfil mostra uma docência altamente especializada, com 85,5% possuindo mestrado ou doutorado. Há uma divisão estratégica de qualificação: as instituições públicas concentram os maiores titulações (doutorado), enquanto as privadas predominam na especialização e mestrado, refletindo possíveis diferenças nas exigências e focos institucionais.
+
+
+
+# Faixa etária dos docentes
+```{r}
+faixa_etaria <- docentes %>% select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_35_39, QT_DOC_EX_40_44, QT_DOC_EX_45_49, QT_DOC_EX_50_54, QT_DOC_EX_55_59, QT_DOC_EX_60_MAIS)%>%
+  # Transformar colunas em linhas
+  pivot_longer(
+    cols = everything(),
+    names_to = "faixa_etaria_original",
+    values_to = "quantidade"
+  ) %>%
+  # Limpar e renomear as faixas etárias
+  mutate(
+    faixa_etaria = case_when(
+      faixa_etaria_original == "QT_DOC_EX_0_29" ~ "Até 29 anos",
+      faixa_etaria_original == "QT_DOC_EX_30_34" ~ "30 a 34 anos",
+      faixa_etaria_original == "QT_DOC_EX_35_39" ~ "35 a 39 anos",
+      faixa_etaria_original == "QT_DOC_EX_40_44" ~ "40 a 44 anos",
+      faixa_etaria_original == "QT_DOC_EX_45_49" ~ "45 a 49 anos",
+      faixa_etaria_original == "QT_DOC_EX_50_54" ~ "50 a 54 anos",
+      faixa_etaria_original == "QT_DOC_EX_55_59" ~ "55 a 59 anos",
+      faixa_etaria_original == "QT_DOC_EX_60_MAIS" ~ "60 anos ou mais"
+    )
+  ) %>%
+  # Agrupar por faixa etária e somar
+  group_by(faixa_etaria) %>%
+  summarise(total_docentes = sum(quantidade, na.rm = TRUE)) %>%
+  # Ordenar de forma lógica
+  mutate(
+    faixa_etaria = factor(faixa_etaria,
+                         levels = c("Até 29 anos", "30 a 34 anos", "35 a 39 anos", 
+                                   "40 a 44 anos", "45 a 49 anos", 
+                                   "50 a 54 anos", "55 a 59 anos", 
+                                   "60 anos ou mais")),
+  percentual = round((total_docentes / sum(total_docentes)) * 100, 1)
+  ) %>%
+  arrange(faixa_etaria)
+
+print(faixa_etaria)
+
+
+
+
+```
+
+
+
+
+
+
+
+# Gŕafico faixa etária
+
+```{r}
+library(ggplot2)
+library(scales)
+
+ggplot(faixa_etaria, aes(x = faixa_etaria, y = total_docentes, fill = faixa_etaria)) +
+  geom_col(alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(total_docentes), "\n(", percentual, "%)")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Distribuição de docentes por faixa etária",
+    x = "Faixa Etária",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(
+    labels = scales::comma,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  theme_classic() +
+ theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+```
+
+
+
+O perfil etário mostra uma docência predominantemente madura, com 84,1% dos profissionais acima dos 35 anos. A significativa presença de docentes acima dos 60 anos (16,1%) sugere tanto experiência consolidada quanto possíveis desafios futuros de renovação geracional. A baixa representatividade da faixa até 29 anos (4,1%) indica uma entrada mais tardia na carreira docente ou menor atratividade para os mais jovens.
+
+
+
+
+
+
+# Perfil étinico dos docentes
+
+
+```{r}
+etnia <- docentes %>% select(QT_DOC_EX_BRANCA, QT_DOC_EX_PRETA, QT_DOC_EX_PARDA, QT_DOC_EX_AMARELA, QT_DOC_EX_INDIGENA, QT_DOC_EX_COR_ND) %>%
+  # Transformar colunas em linhas
+  pivot_longer(
+    cols = everything(),
+    names_to = "Etnia",
+    values_to = "Quantidade"
+  ) %>%
+  # Limpar e renomear as faixas etárias
+  mutate(
+    Etnia = case_when(
+      Etnia == "QT_DOC_EX_BRANCA" ~ "Branca",
+      Etnia == "QT_DOC_EX_PRETA" ~ "Preta",
+      Etnia == "QT_DOC_EX_PARDA" ~ "Parda",
+      Etnia == "QT_DOC_EX_AMARELA" ~ "Amarela",
+      Etnia  == "QT_DOC_EX_INDIGENA" ~ "Indígena",
+      Etnia == "QT_DOC_EX_COR_ND" ~ "Não Declarada"
+    )
+  ) %>%
+  # Agrupar por faixa etária e somar
+  group_by(Etnia) %>%
+  summarise(total_docentes = sum(Quantidade, na.rm = TRUE)) %>%
+  # Ordenar de forma lógica
+  mutate(
+    Etnia = factor(Etnia,
+                         levels = c("Branca", "Preta", 
+                                   "Parda", "Amarela", 
+                                   "Indígena", "Não Declarada")),
+  percentual = round((total_docentes / sum(total_docentes)) * 100, 1)
+  ) %>%
+  arrange(Etnia)
+
+print(etnia)
+```
+```{r}
+etnia %>%
+  mutate(
+    total_docentes = scales::comma(total_docentes),
+    percentual = paste0(percentual, "%")
+  ) %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 16px; font-weight: bold;'>DISTRIBUIÇÃO DE DOCENTES POR ETNIA</div>",
+    col.names = c("Etnia", "Total de Docentes", "Percentual"),
+    align = c("c", "c", "c")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    font_size = 14,
+    position = "center"
+  ) %>%
+  column_spec(1, bold = TRUE, width = "35%") %>%
+  column_spec(2:3, width = "32.5%") %>%
+  row_spec(0, bold = TRUE, font_size = 15, background = "#f8f9fa") %>%
+  footnote(
+    general = "Fonte: Dados institucionais. Valores calculados com base na autodeclaração dos docentes.",
+    general_title = ""
+  )
+```
+
+
+```{r}
+ggplot(etnia, aes(x = Etnia, y = total_docentes)) +
+  geom_col(fill = "purple", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(total_docentes), "\n(", percentual, "%)")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Distribuição de docentes por Etnia",
+    x = "Etnia",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(
+    labels = scales::comma,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  theme_classic() +
+ theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+```
+
+
+
+
+
+
+Com base nos dados de distribuição étnico-racial dos docentes, observa-se uma significativa desproporção: profissionais brancos representam 61,9% do total, seguidos por pardos (19,9%) e pretos (3,2%), enquanto indígenas e amarelos têm representatividade abaixo de 1,5% somados. Chama atenção que 13,5% dos docentes não declararam etnia, um percentual que supera todas as minorias étnicas exceto pardos. Esses números evidenciam uma substancial sub-representação de docentes negros, indígenas e amarelos no conjunto do magistério, com predominância esmagadora de profissionais brancos.
+

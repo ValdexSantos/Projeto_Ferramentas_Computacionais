@@ -9,6 +9,20 @@ output: html_notebook
 
 Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
 
+## 1.1. Objetivo Geral
+
+Compreender o panorama das Instituições de Ensino Superior (IES) no Brasil, analisando a distribuição regional, diferenças entre instituições públicas e privadas, e o perfil demográfico de funcionários e docentes, com vistas a fornecer dados que podem ajudar no planejamento educacional e políticas públicas.
+
+## 1.2. Objetivos específicos
+
+Analisar a distribuição geográfica das IES no Brasil:
+
++ Comparar as proporções de instituições públicas e privadas e suas variações regionais.
++ Avaliar as taxas de matrícula e conclusão de cursos, especialmente em instituições públicas.
++ Verificar cursos e tipos mais procurados e outros tipos menos procurados.
++ Examinar o perfil demográfico e de qualificação dos funcionários e docentes das IES.
++ Analisar o perfil étnico racional de alunos e docentes das IES.
+
 
 # 2. Lendo os dados
 Os comandos abaixo fará a leitura dos seguintes dados:
@@ -494,5 +508,5 @@ ggplot(dados_ies, aes(x = REGIAO, fill = REDE)) +
   )
 ```
 
-## 3.3. Em relação aos Curso
+## 3.3. Em relação aos Curso (Amauri)
 

@@ -1,0 +1,237 @@
+---
+title: "Análise Exploratória de Dados da Educação Superior em R"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+------------------------------------------------------------------------
+
+Bibliotecas utilizadas:
+
+```{r, message=FALSE}
+library(readxl)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+Localização dos dados:
+
+```{r, message=FALSE}
+dicionario_dados <- read_excel("/microdados_censo_da_educacao_superior_2024/dicionario_dados_educacao_superior.xlsx")
+dados_cursos <- read.csv("/microdados_censo_da_educacao_superior_2024/MICRODADOS_CADASTRO_CURSOS_2024.CSV", sep=';', encoding='latin1')
+```
+
+## 3.3 Em relação aos cursos
+
+Montagem do banco de dados que será utilizado nessas análizes:
+
+```{r}
+dadosA <- data.frame(
+  "Curso" = dados_cursos$NO_CINE_ROTULO,
+  "Tipo_de_curso"= case_when(
+      dados_cursos$TP_GRAU_ACADEMICO == 1 ~ "Bacharelado",
+      dados_cursos$TP_GRAU_ACADEMICO == 2 ~ "Licenciatura",
+      dados_cursos$TP_GRAU_ACADEMICO == 3 ~ "Tecnólogo",
+      dados_cursos$TP_GRAU_ACADEMICO == 4 ~ "Bacharelado e Licenciatura",
+      TRUE ~ "Não se aplica" 
+    ),
+  "Quantidade_de_vagas"= dados_cursos$QT_VG_TOTAL,
+  "Numero_de_ingressantes"=dados_cursos$QT_ING,
+  "Numero_de_concluintes"=dados_cursos$QT_CONC
+  )
+```
+
+Vamos analisar quais são os 10 cursos que são oferecidos em maior quantidade, para isso fazemos um código que contabiliza quantas vezes cada curso é oferecido, organiza os cursos em ordem decrescente de quantidade e separa os 10 mais oferecidos:
+
+```{r}
+dadosA_frequentes <- dadosA %>%
+  group_by(Curso) %>%
+summarise(
+  Quantidade_de_cursos = n(),.groups = 'drop') %>%
+  mutate(Total_Geral = sum(Quantidade_de_cursos),`Percentual (%)` = round((Quantidade_de_cursos / Total_Geral) * 100, 2)
+  ) %>%
+  select(-Total_Geral)
+
+ord_dadosA <- dadosA_frequentes %>%
+  arrange(desc(Quantidade_de_cursos))%>%
+slice_head(n = 10)
+print(ord_dadosA)
+```
+
+É possivel perceber que 7 dos 10 cursos mais oferecidos tem relação com a área empresarial.
+
+Ao análisarmos os tipos de graduação, o tecnólogo é consideravelmente mais oferecido do que os outros tipos, chegando a ser quase que metade dos cursos. Uma maior quantidade de cursos da área empresarial e de cursos tecnólogos podem refletir uma demanda para uma formação mais rápida e direcionada para o ingresso no mercado de trabalho.
+
+```{r}
+tipo_curso <- dadosA %>%
+ group_by(Tipo_de_curso) %>%
+ summarise(
+   Quant_grau =n(),.groups = 'drop') %>%
+  mutate(Total_tipo = sum(Quant_grau),`Percentual (%)` = round((Quant_grau / Total_tipo) *100, 2)
+ ) %>%
+  select(-Total_tipo,-Quant_grau)
+
+ord_tipo <- tipo_curso %>%
+  arrange(desc(`Percentual (%)`))
+print(ord_tipo)
+```
+
+Porem uma quantidade maior de cursos sendo oferecidos não representa nescessariamente que as vagas desses cursos estejam sendo preenchidas e nem que os ingressantes desses cursos os finalizem, o bacharelado é o tipo de curso com o maior percentual de preenchimento das vagas oferecidas.
+
+```{r}
+vagasA<- dadosA %>%
+  group_by(Tipo_de_curso) %>%
+  summarise(
+    vagas_total = sum(Quantidade_de_vagas),
+    ingressantes= sum(Numero_de_ingressantes),
+    `%_vagas_preenchidas`= round((ingressantes/vagas_total) *100,2),
+    concluintes= sum(Numero_de_concluintes),
+    `%_de_concluintes`= round((concluintes/ingressantes) *100,2),
+    .groups = 'drop')%>%
+  arrange(desc(`%_vagas_preenchidas`))
+print(vagasA)
+```
+
+## 3.4 Preenchimento de vagas ofertadas por região
+
+Montando um banco de dados para essa análise:
+
+```{r}
+dadosB <-data.frame(
+  "regiao"= case_when(
+    dados_cursos$NO_REGIAO==""~"Remoto",
+    dados_cursos$NO_REGIAO=="Centro-Oeste"~"Centro-Oeste",
+    dados_cursos$NO_REGIAO=="Nordeste"~"Nordeste",
+    dados_cursos$NO_REGIAO=="Norte"~"Norte",
+    dados_cursos$NO_REGIAO=="Sudeste"~"Sudeste",
+    dados_cursos$NO_REGIAO=="Sul"~"Sul"),
+  "qnt_vagas"= dados_cursos$QT_VG_TOTAL,
+  "qnt_ingressantes"=dados_cursos$QT_ING,
+  "tipo_de_inst"= case_when(
+    dados_cursos$TP_REDE=="1"~"Publica",
+    dados_cursos$TP_REDE=="2"~"Privada"),
+  "nmr_concluintes"=dados_cursos$QT_CONC
+)
+```
+
+```{r}
+vagas_regiao<- dadosB %>%
+  group_by(regiao) %>%
+  summarise(
+    vagas_total= sum(qnt_vagas),
+    ingressantes= sum(qnt_ingressantes),
+    `%_de_preenchimento`= round((ingressantes/vagas_total)*100,2),
+    .groups = 'drop')
+
+ord_vagas_regiao<- vagas_regiao%>%
+  arrange(desc(`%_de_preenchimento`))
+print(ord_vagas_regiao)
+
+```
+
+A região Sul é a região em que a porcetagem das vagas preenchidas em relação as vagas oferecidas é maior e a região Sudeste é a região com o maior quantitativo de oferta de vagas.
+
+```{r}
+dados_longos <- ord_vagas_regiao %>%
+  select(regiao, vagas_total, ingressantes) %>%
+  pivot_longer(
+    cols = c(vagas_total, ingressantes),
+    names_to = "Tipo_de_Contagem",
+    values_to = "Quantidade"
+  )
+ggplot(dados_longos, aes(x = reorder(regiao, Quantidade), y = Quantidade, fill = Tipo_de_Contagem)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = Quantidade),
+    position = position_dodge(width = 0.8),
+    vjust = -0.5,
+    size = 3
+  ) +
+  scale_fill_manual(
+    values = c("vagas_total" = "#1f77b4", "ingressantes" = "#ff7f0e"),
+    labels = c("ingressantes" = "Ingressantes", "vagas_total" = "Vagas Totais")
+  ) +
+  labs(
+    title = "Vagas Totais vs. Ingressantes por Região",
+    x = "Região",
+    y = "Quantidade",
+    fill = "Tipo de Contagem"
+  )
+```
+
+Observando o gráfico, a discrepancia da quantidade de vagas oferecidas remotamente fica mais evidente.
+
+```{r}
+ggplot(vagasA, aes(x = ingressantes, y = concluintes)) + 
+  geom_point(aes(color = Tipo_de_curso, size = vagas_total), alpha = 0.8) +
+  # Adiciona rótulos para identificar cada Tipo_de_curso
+  geom_text(aes(label = Tipo_de_curso, color = Tipo_de_curso), vjust = 2, size = 3.5, check_overlap = TRUE) +
+  labs(
+    title = "Relação entre Ingressantes e Concluintes por Tipo de Curso",
+    subtitle = "O tamanho do ponto indica o total de vagas (vagas_total)",
+    x = "Total de Ingressantes",
+    y = "Total de Concluintes",
+    color = "Tipo de Curso",
+    size = "Total de Vagas"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+```
+
+Outro dado importante de se analisar é o tipo de instituição que está oferecendo os cursos, se é publica ou privada.
+
+```{r}
+concluintes_regiao<- dadosB%>%
+  group_by(regiao)%>%
+  summarise(
+    cln_regiao=sum(nmr_concluintes),
+    .groups='drop')
+
+concluinte<- dadosB%>%
+  group_by(regiao,tipo_de_inst) %>%
+  summarise(
+    qnt_concluintes= sum(nmr_concluintes),
+  .groups= 'drop')
+
+concluinteB<- concluinte%>%
+  left_join(concluintes_regiao, by ="regiao")%>%
+  mutate(pct_concluintes = round((qnt_concluintes / cln_regiao) * 100, 2)) %>%
+  pivot_wider(
+    names_from =tipo_de_inst,
+    values_from = c(qnt_concluintes, pct_concluintes))%>%
+  arrange(desc(cln_regiao))%>%
+    select(-cln_regiao)
+print(concluinteB)
+```
+
+Podemos observar que o quantitativo de formandos das instituições privadas é bem maior.
+
+```{r}
+ggplot(concluinte, aes(x = regiao, y = qnt_concluintes, fill = tipo_de_inst)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = qnt_concluintes),
+    position = position_dodge(width = 0.8),
+    vjust = -0.3,
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(
+    values = c("Privada" = "#e74c3c", "Publica" = "#2980b9") # Vermelho/Azul para contraste
+  ) +
+  labs(
+    title = "Concluintes de Instituições Públicas e Privadas por Região",
+    x = "Região",
+    y = "Número de Concluintes",
+    fill = "Tipo de Instituição"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
