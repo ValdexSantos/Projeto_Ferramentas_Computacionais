@@ -1238,6 +1238,259 @@ ggplot(dados_comp, aes(x = titulacao, y = Quantidade, fill = Tipo)) +
 ```
  
 ### 3.6.3. Faixa etária dos docentes
+
+Vamos analisar agora a faixa etária dos docentes das IES, lembrando que não temos esses dados em relação aos técnicos. A tabela 11 abaixo exibe a faixa etária dos docentes da IES.
+
+```{r}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+faixa_etaria <- docentes %>%
+  select(QT_DOC_EX_0_29, QT_DOC_EX_30_34, QT_DOC_EX_35_39, QT_DOC_EX_40_44,
+         QT_DOC_EX_45_49, QT_DOC_EX_50_54, QT_DOC_EX_55_59, QT_DOC_EX_60_MAIS) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "faixa_etaria_original",
+    values_to = "quantidade"
+  ) %>%
+  mutate(
+    faixa_etaria = case_when(
+      faixa_etaria_original == "QT_DOC_EX_0_29"    ~ "Até 29 anos",
+      faixa_etaria_original == "QT_DOC_EX_30_34"  ~ "30 a 34 anos",
+      faixa_etaria_original == "QT_DOC_EX_35_39"  ~ "35 a 39 anos",
+      faixa_etaria_original == "QT_DOC_EX_40_44"  ~ "40 a 44 anos",
+      faixa_etaria_original == "QT_DOC_EX_45_49"  ~ "45 a 49 anos",
+      faixa_etaria_original == "QT_DOC_EX_50_54"  ~ "50 a 54 anos",
+      faixa_etaria_original == "QT_DOC_EX_55_59"  ~ "55 a 59 anos",
+      faixa_etaria_original == "QT_DOC_EX_60_MAIS" ~ "60 anos ou mais"
+    )
+  ) %>%
+  group_by(faixa_etaria) %>%
+  summarise(total_docentes = sum(quantidade, na.rm = TRUE), .groups = "drop") %>%
+  mutate(
+    faixa_etaria = factor(faixa_etaria,
+      levels = c("Até 29 anos", "30 a 34 anos", "35 a 39 anos",
+                 "40 a 44 anos", "45 a 49 anos",
+                 "50 a 54 anos", "55 a 59 anos",
+                 "60 anos ou mais")),
+    percentual = round(total_docentes / sum(total_docentes) * 100, 1)
+  ) %>%
+  arrange(faixa_etaria) %>%
+  mutate(
+    Total = format(total_docentes, big.mark = ".", decimal.mark = ","),
+    `% do total` = paste0(percentual, "%")
+  ) %>%
+  select(Faixa = faixa_etaria, Total, `% do total`)
+
+# Tabela final
+faixa_etaria %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align:center; font-weight:bold; font-size:16px;'>Tabela 11: Distribuição etária dos docentes (total e percentual)</div>",
+    align = c("l", "r", "r")
+  ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE, position = "center") %>%
+  column_spec(1, width = "6cm") %>%
+  column_spec(2:3, width = "3.5cm") %>%
+  row_spec(0, bold = TRUE)
+```
+
+Também exibimos a faixa etária dos docentes das ies no gráfico da Figura 11. Podemos perceber que, em sua maioria, possui entre 40 e 44 anos (representando 18,2% do total). A faixa de 45-49 anos também apresenta um número elevado de docentes, com 16,3%. 
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+
+nm <- names(faixa_etaria)
+
+total_col_candidates <- grep("^total_docentes$|^total$|Total_Geral$|^Total$", nm, ignore.case = TRUE, value = TRUE)
+percent_col_candidates <- grep("^percentual$|percent|% do total|perc", nm, ignore.case = TRUE, value = TRUE)
+faixa_col_candidates <- grep("^faixa_etaria$|^Faixa$|^faixa$|^faixa_etaria_original$", nm, ignore.case = TRUE, value = TRUE)
+
+total_col <- if (length(total_col_candidates) > 0) total_col_candidates[1] else NA_character_
+percent_col <- if (length(percent_col_candidates) > 0) percent_col_candidates[1] else NA_character_
+faixa_col <- if (length(faixa_col_candidates) > 0) faixa_col_candidates[1] else NA_character_
+
+if (is.na(total_col) || is.na(percent_col) || is.na(faixa_col)) {
+  stop("Não localizei automaticamente as colunas necessárias. Rode names(faixa_etaria) e verifique:\n",
+       "Esperado: coluna de faixa (ex.: 'Faixa' ou 'faixa_etaria'), coluna de total (ex.: 'total_docentes' ou 'Total'), coluna de percentual (ex.: 'percentual' ou '% do total').")
+}
+
+raw_total <- faixa_etaria[[total_col]]
+total_vec <- if (is.numeric(raw_total)) {
+  as.numeric(raw_total)
+} else {
+  as.numeric(gsub("\\.", "", as.character(raw_total)))
+}
+
+# percentual: limpar '%' e vírgula decimal
+raw_perc <- faixa_etaria[[percent_col]]
+perc_vec <- as.character(raw_perc)
+perc_vec <- gsub("\\s+", "", perc_vec)
+perc_vec <- gsub("%", "", perc_vec, fixed = TRUE)
+perc_vec <- gsub(",", ".", perc_vec, fixed = TRUE)
+perc_vec <- as.numeric(perc_vec)
+
+# faixa (rótulo)
+faixa_vec <- as.character(faixa_etaria[[faixa_col]])
+
+
+plot_df <- tibble(
+  faixa_etaria = faixa_vec,
+  total_docentes = total_vec,
+  percentual = perc_vec
+)
+
+# 4) garantir ordem lógica das faixas
+plot_df <- plot_df %>%
+  mutate(
+    faixa_etaria = factor(faixa_etaria,
+                          levels = c("Até 29 anos", "30 a 34 anos", "35 a 39 anos",
+                                     "40 a 44 anos", "45 a 49 anos",
+                                     "50 a 54 anos", "55 a 59 anos",
+                                     "60 anos ou mais"))
+  ) %>%
+  arrange(faixa_etaria)
+
+
+if (any(is.na(plot_df$total_docentes))) stop("Há NA em total_docentes após conversão. Verifique as colunas.")
+if (any(is.na(plot_df$percentual))) stop("Há NA em percentual após conversão. Verifique as colunas.")
+
+# 5) gráfico
+ggplot(plot_df, aes(x = faixa_etaria, y = total_docentes, fill = faixa_etaria)) +
+  geom_col(alpha = 0.8, width = 0.7, show.legend = FALSE) +
+  geom_text(aes(label = paste0(comma(total_docentes), "\n(", percentual, "%)")),
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Figura 11: Distribuição de docentes por faixa etária",
+    x = "Faixa Etária",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none",
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.3, margin = margin(b = 20)),
+    axis.title.x = element_text(face = "bold", size = 14),
+    axis.title.y = element_text(face = "bold", size = 14)
+  )
+
+```
+Vale salientar que a quarta faixa etária que possui mais docentes é a dos docentes que tem mais de 60 anos (certa de 13,5%), o que acende um alerta, já que estes estão próximos à aposentadoria. A faixa etária com menor número de docentes é que corresponde aos docentes com menos de 29 anos, representando apenas 3,5% do total. Isso indica uma menor presença de docentes iniciantes na carreira do magistério nas IES e  uma entrada mais tardia na carreira docente ou menor atratividade para os mais jovens.. 
+
+
+### 3.6.4. Perfil étinico dos docentes
+
+Em relação à etnia dos docentes das IES, 61,9% se declaram brancos e apenas 3,2% se declaram pretos. Neste meio, 19,9% se declaram pardos. Um número significativo não declara a cor (13,5%), conforme evidencia a Tabela 12 e a Figura 12 abaixo.
+
+```{r}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(scales)
+
+#Preparando dados
+etnia <- docentes %>%
+  select(QT_DOC_EX_BRANCA, QT_DOC_EX_PRETA, QT_DOC_EX_PARDA,
+         QT_DOC_EX_AMARELA, QT_DOC_EX_INDIGENA, QT_DOC_EX_COR_ND) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "Etnia_original",
+    values_to = "Quantidade"
+  ) %>%
+  mutate(
+    Etnia = case_when(
+      Etnia_original == "QT_DOC_EX_BRANCA"   ~ "Branca",
+      Etnia_original == "QT_DOC_EX_PRETA"    ~ "Preta",
+      Etnia_original == "QT_DOC_EX_PARDA"    ~ "Parda",
+      Etnia_original == "QT_DOC_EX_AMARELA"  ~ "Amarela",
+      Etnia_original == "QT_DOC_EX_INDIGENA" ~ "Indígena",
+      Etnia_original == "QT_DOC_EX_COR_ND"   ~ "Não Declarada",
+      TRUE ~ Etnia_original
+    )
+  ) %>%
+  group_by(Etnia) %>%
+  summarise(
+    total_docentes = sum(Quantidade, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Etnia = factor(Etnia, levels = c("Branca", "Preta", "Parda", "Amarela", "Indígena", "Não Declarada")),
+    percentual = round(total_docentes / sum(total_docentes, na.rm = TRUE) * 100, 1)
+  ) %>%
+  arrange(Etnia)
+
+
+etnia_display <- etnia %>%
+  mutate(
+    Total_fmt = comma(total_docentes),
+    Perc_fmt  = paste0(percentual, "%")
+  ) %>%
+  select(Etnia, Total_fmt, Perc_fmt) %>%
+  rename(
+    `Etnia` = Etnia,
+    `Total de Docentes` = Total_fmt,
+    `Percentual` = Perc_fmt
+  )
+
+
+etnia_display %>%
+  kable(
+    format = "html",
+    caption = "<div style='text-align: center; font-size: 16px; font-weight: bold;'>Tabela 12: DISTRIBUIÇÃO DE DOCENTES POR ETNIA</div>",
+    align = c("l", "r", "r"),
+    escape = FALSE
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed"),
+    full_width = FALSE,
+    font_size = 14,
+    position = "center"
+  ) %>%
+  column_spec(1, bold = TRUE, width = "35%") %>%
+  column_spec(2:3, width = "32.5%") %>%
+  row_spec(0, bold = TRUE, font_size = 15, background = "#f8f9fa") %>%
+  footnote(
+    general = "Fonte: Dados institucionais. Valores calculados com base na autodeclaração dos docentes.",
+    general_title = ""
+  )
+
+```
+```{r}
+ggplot(etnia, aes(x = Etnia, y = total_docentes)) +
+  geom_col(fill = "purple", alpha = 0.8, width = 0.7) +
+  geom_text(aes(label = paste0(scales::comma(total_docentes), "\n(", percentual, "%)")), 
+            vjust = -0.3, size = 4, fontface = "bold", lineheight = 0.8) +
+  labs(
+    title = "Figura 12: Distribuição de docentes por Etnia",
+    x = "Etnia",
+    y = "Total de Docentes"
+  ) +
+  scale_y_continuous(
+    labels = scales::comma,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  theme_classic() +
+ theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = 'bold'),
+    plot.title = element_text(size = 16, face = 'bold', hjust = 0.3, margin = margin(b = 20)),
+    plot.subtitle = element_text(size = 14, hjust = 0.5),
+    axis.title.x = element_text(face = "bold", size = 14, margin = margin(r = 10)),
+    axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
+  )
+```
+
+## 3.7. Perfil dos alunos
+
 ```{r}
 grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
 
