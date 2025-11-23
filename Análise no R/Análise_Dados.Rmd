@@ -1522,6 +1522,74 @@ ggplot(matriculas_concluintes, aes(x = Categoria, y = Quantidade, fill = Categor
 
 Em relação a quantidade de alunos que realizaram a matrícula em algum curso do Ensino Superior e aqueles que concluíram, podemos observar uma grande disparidade. Enquanto cerca de 10 milhões de estudantes ingressam, menos de 1,5 milhões concluem seus cursos. Isso sugere uma taxa significativa de evasão ou retenção no sistema educacional. A diferença aponta para desafios estruturais que impactam a permanência e o sucesso acadêmico dos alunos.
 
+### 3.7.2 Faixa Etária
+Realizamos a análise a seguir, na Figura 14, com o intuito de mostrar a distribuição dos alunos por faixa etária. 
+
+```{r fig.width=8, fig.height=5}
+
+library(scales) 
+
+faixa_etaria <- cadastro_cursos %>%
+  summarise(
+    `0-17`   = sum(QT_ING_0_17, na.rm = TRUE),
+    `18-24`  = sum(QT_ING_18_24, na.rm = TRUE),
+    `25-29`  = sum(QT_ING_25_29, na.rm = TRUE),
+    `30-34`  = sum(QT_ING_30_34, na.rm = TRUE),
+    `35-39`  = sum(QT_ING_35_39, na.rm = TRUE),
+    `40-49`  = sum(QT_ING_40_49, na.rm = TRUE),
+    `50-59`  = sum(QT_ING_50_59, na.rm = TRUE),
+    `60+`    = sum(QT_ING_60_MAIS, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Faixa_Etaria",
+               values_to = "Quantidade")
+
+ggplot(faixa_etaria, aes(x = Faixa_Etaria, y = Quantidade, fill = Faixa_Etaria)) +
+  geom_col() +
+  labs(
+    title = "Figura 14: Distribuição de Alunos por Faixa Etária",
+    x = "Faixa Etária",
+    y = "Quantidade de Alunos"
+  ) +
+  scale_y_continuous(labels = label_comma(big.mark = ".", decimal.mark = ",")) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+A maioria dos alunos que iniciam a graduação estão na faixa etária de 18 a 24 anos (cerca de 2 milhões). As faixas de 25 a 39 anos também apresentam números expressivos, indicando presença significativa de adultos jovens no sistema educacional. Já os extremos de 0-17 e acima de 50 anos, têm participação muito menor. Isso revela que o ensino superior é majoritariamente frequentado por jovens adultos.
+
+### 3.7.3 Etnia
+A seguir, na Figura 15, a composição étnica dos alunos.
+
+```{r fig.width=8, fig.height=5}
+library(scales)  
+
+etnia <- cadastro_cursos %>%
+  summarise(
+    Branca = sum(QT_ING_BRANCA, na.rm = TRUE),
+    Preta = sum(QT_ING_PRETA, na.rm = TRUE),
+    Parda = sum(QT_ING_PARDA, na.rm = TRUE),
+    Amarela = sum(QT_ING_AMARELA, na.rm = TRUE),
+    Indígena = sum(QT_ING_INDIGENA, na.rm = TRUE),
+    Sem_Informação = sum(QT_ING_CORND, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Etnia",
+               values_to = "Quantidade")
+
+ggplot(etnia, aes(x = Etnia, y = Quantidade, fill = Etnia)) +
+  geom_col() +
+  labs(
+    title = "Figura 1: Distribuição de Alunos por Etnia",
+    x = "Etnia",
+    y = "Quantidade de Alunos"
+  ) +
+  scale_y_continuous(labels = label_comma(big.mark = ".", decimal.mark = ",")) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+O gráfico revela que a maioria dos alunos se autodeclaram na cor branca (mais de 2 milhões registrados). As categorias parda e sem informação também apresentam números expressivos, em torno de 1 milhão cada. Já as etnias preta, amarela e indígena têm participação significativamente menor. Essa distribuição aponta para desigualdades étnicas no acesso à educação, além de possíveis lacunas na coleta de dados devido a quantidade de alunos "sem informação" sobre sua etnia.
 
 ```{r}
 grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
