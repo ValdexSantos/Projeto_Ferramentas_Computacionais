@@ -1488,8 +1488,40 @@ ggplot(etnia, aes(x = Etnia, y = total_docentes)) +
     axis.title.y = element_text(face = "bold", size = 14, margin = margin(r = 10))
   )
 ```
+om base nos dados de distribuição étnico-racial dos docentes, observa-se uma significativa desproporção: profissionais brancos representam 61,9% do total, seguidos por pardos (19,9%) e pretos (3,2%), enquanto indígenas e amarelos têm representatividade abaixo de 1,5% somados. Chama atenção que 13,5% dos docentes não declararam etnia, um percentual que supera todas as minorias étnicas exceto pardos. Esses números evidenciam uma substancial sub-representação de docentes negros, indígenas e amarelos no conjunto do magistério, com predominância esmagadora de profissionais brancos.
 
-## 3.7. Perfil dos alunos
+## 3.7. Perfil dos discentes
+
+### 3.7.1 Matrículas vs Concluinte
+
+O gráfico da Figura 12 abaixo tem como objetivo comparar o número de alunos matriculados com o número de concluintes.
+
+```{r fig.width=8, fig.height=5}
+library(scales) 
+
+matriculas_concluintes <- cadastro_cursos %>%
+  summarise(
+    Matrículas = sum(QT_MAT, na.rm = TRUE),
+    Concluintes = sum(QT_CONC, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Categoria",
+               values_to = "Quantidade")
+
+ggplot(matriculas_concluintes, aes(x = Categoria, y = Quantidade, fill = Categoria)) +
+  geom_col() +
+  labs(
+    title = "Figura 13: Comparativo entre Matrículas e Concluintes",
+    x = "Categoria",
+    y = "Quantidade de Alunos"
+  ) +
+  scale_y_continuous(labels = label_comma(big.mark = ".", decimal.mark = ",")) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+Em relação a quantidade de alunos que realizaram a matrícula em algum curso do Ensino Superior e aqueles que concluíram, podemos observar uma grande disparidade. Enquanto cerca de 10 milhões de estudantes ingressam, menos de 1,5 milhões concluem seus cursos. Isso sugere uma taxa significativa de evasão ou retenção no sistema educacional. A diferença aponta para desafios estruturais que impactam a permanência e o sucesso acadêmico dos alunos.
+
 
 ```{r}
 grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
