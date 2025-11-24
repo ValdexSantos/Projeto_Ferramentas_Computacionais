@@ -728,7 +728,37 @@ kable(
   column_spec(6, width = "3.5cm")
 ```
 
+
+```{r}
+library(ggplot2)
+ggplot(concluinte, aes(x = regiao, y = qnt_concluintes, fill = tipo_de_inst)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(
+    aes(label = qnt_concluintes),
+    position = position_dodge(width = 0.8),
+    vjust = -0.3,
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(
+    values = c("Privada" = "#e74c3c", "Publica" = "#2980b9") # Vermelho/Azul para contraste
+  ) +
+  labs(
+    title = "Concluintes de Instituições Públicas e Privadas por Região",
+    x = "Região",
+    y = "Número de Concluintes",
+    fill = "Tipo de Instituição"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
+
 Como podemos observar há muito mais ofertas e portanto, muito mais ongressantes em instituições privada (88,52%) do que em instituições públicas, assim como concluientes. No entato, a taxa de conclusão, ou seja, a razão entre ingressantes e concluintes é muito maior em instituções públicas. Em outras palavras os alunos que ingressam em IES publicam concluem mais, o que indica que a evasão ou abandono em IES privadas é maior.
+
+
 
 ## 3.5. Perfil dos Funcionários das IES
 
@@ -736,6 +766,7 @@ Nesta seção iremos análise do Perfil dos servidores (técnicos):
 - Quantidade total de servidores;             
 - Distribuição de gênero entre os servidores;       
 - Níveis de escolaridade entre os servidores.
+
 ### 3.5.1. Sexo e Escolaridade
 
 Do total de 350.752  funcionários técnicos, 194.439 são do sexo feminino (55,4%) e 156.313 do sexo masculino (44,6%), portanto existe um número significativo a mais de mulheres que de homens, conforme ilustra a Figura 5 abaixo.
