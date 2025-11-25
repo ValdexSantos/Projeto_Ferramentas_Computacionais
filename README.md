@@ -25,7 +25,7 @@ Neste projeto analisaremos dados relacionados a:
   * **Doutorando** em Ciências Biológicas (Biologia Celular, Molecular e Microbiologia) - UNESP Rio Claro.
   * Mestre em Produção Vegetal e Bioprocessos Associados - UFSCar Araras.
   * Licenciado em Ciências Biológicas - UFSCar Araras.
-  
+
 
 
   ### Amauri ...
@@ -35,12 +35,13 @@ Neste projeto analisaremos dados relacionados a:
 
   ### Joyce Alessandra Lima
   * **Doutoranda** em Biotecnologia - UNESP Araraquara
-  * Mestra em Ciências da Saúde com Ênfase em Oncologia Molecular - Hospital de Amor
+  * Mestre em Ciências da Saúde com Ênfase em Oncologia Molecular - Hospital de Amor
   * Especialista em Biomedicina com Ênfase em Oncologia Molecular - Hospital de Amor
   * Bacharelado em Biomedicina - FHO/Uniararas
   
 ---  
 ## Banco de Dados
-Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
+Neste notebook do R iremos analisar microdados educacionais extraídos do [Senso Educacional 2024](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
+
 
 
