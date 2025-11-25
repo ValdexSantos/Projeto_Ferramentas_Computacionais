@@ -9,30 +9,31 @@ Neste projeto analisaremos dados relacionados a:
 * Verificar a relação entre o número de matrículas e as taxas de conclusão dos cursos.
 * Investigar perfil sócio-étnico, de gênero e idade dos principais entes da comunidade escolar, tais como:  ingressantes, servidores e docentes.
 *  Relacionar a demanda de ingresso de estudantes com o capital humano gerado, ou seja, os egressos.
+---
 
 ## Componentes
 
-### Valdex Santos
-* **Doutorando** em Ciências Ambientais - UNESP Sorocaba.
-* Mestre em Modelagem Computacional em Ciência e Tecnologia
-* Licenciado em Matemática
+  ### Valdex Santos
+  * **Doutorando** em Ciências Ambientais - UNESP Sorocaba.
+  * Mestre em Modelagem Computacional em Ciência e Tecnologia
+  * Licenciado em Matemática
 
----
+  ---
 
-### Francisco
-* **Doutorando em ...**
-* Mestre em ...
+  ### Francisco
+  * **Doutorando em ...**
+  * Mestre em ...
   
-----
+  ----
 
-## Amauri ...
-* **Doutorando** em ...
+  ## Amauri ...
+  * **Doutorando** em ...
 
   ----
 
   ## Joyce ...
-* **Doutorando** em ...
+  * **Doutorando** em ...
   
-  
+---  
 ## Banco de Dados
 Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
