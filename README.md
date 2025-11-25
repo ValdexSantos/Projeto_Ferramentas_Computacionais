@@ -40,6 +40,6 @@ Neste projeto analisaremos dados relacionados a:
   
 ---  
 ## Banco de Dados
-Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
+Neste notebook do R iremos analisar microdados educacionais extraídos do [Senso Educacional 2024](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
 
 
