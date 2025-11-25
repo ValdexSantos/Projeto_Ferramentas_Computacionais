@@ -18,18 +18,18 @@ Neste projeto analisaremos dados relacionados a:
   * Mestre em Modelagem Computacional em Ciência e Tecnologia
   * Licenciado em Matemática
 
-  ---
+
 
   ### Francisco
   * **Doutorando em ...**
   * Mestre em ...
   
-  ----
+
 
   ## Amauri ...
   * **Doutorando** em ...
 
-  ----
+ 
 
   ## Joyce ...
   * **Doutorando** em ...
