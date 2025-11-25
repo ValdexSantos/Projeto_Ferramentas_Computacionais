@@ -23,3 +23,16 @@ Neste projeto analisaremos dados relacionados a:
 * **Doutorando em ...**
 * Mestre em ...
   
+----
+
+## Amauri ...
+* **Doutorando** em ...
+
+  ----
+
+  ## Joyce ...
+* **Doutorando** em ...
+  
+  
+## Banco de Dados
+Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
