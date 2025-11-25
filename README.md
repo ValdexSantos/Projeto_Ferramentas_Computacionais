@@ -22,8 +22,9 @@ Neste projeto analisaremos dados relacionados a:
 
 
   ### Francisco
-  * **Doutorando em ...**
-  * Mestre em ...
+  * **Doutorando** em Ciências Biológicas (Biologia Celular, Molecular e Microbiologia) - UNESP Rio Claro.
+  * Mestre em Produção Vegetal e Bioprocessos Associados - UFSCar Araras.
+  * Licenciado em Ciências Biológicas - UFSCar Araras.
   
 
 
