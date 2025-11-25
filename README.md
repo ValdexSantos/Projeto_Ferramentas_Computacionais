@@ -1,10 +1,25 @@
 # Projeto da Disciplina de Ferramentas Computacionais
 
+## Objetivos
+
 Neste projeto analisaremos dados relacionados a:
 * Analisar a distribuição geográfica das IES por região e estado, considerando a relação com a população
 * Comparar a presença de instituições públicas e privadas. 
 * Analisar a demanda por cursos, identificando aqueles com maior e menor procura em nível nacional e por tipo de instituição.
 * Verificar a relação entre o número de matrículas e as taxas de conclusão dos cursos.
 * Investigar perfil sócio-étnico, de gênero e idade dos principais entes da comunidade escolar, tais como:  ingressantes, servidores e docentes.
-*  Relacionar a demanda de ingresso de estudantes com o capital humano gerado, ou seja, os egressos. 
+*  Relacionar a demanda de ingresso de estudantes com o capital humano gerado, ou seja, os egressos.
 
+## Componentes
+
+### Valdex Santos
+* **Doutorando** em Ciências Ambientais - UNESP Sorocaba.
+* Mestre em Modelagem Computacional em Ciência e Tecnologia
+* Licenciado em Matemática
+
+---
+
+### Francisco
+* **Doutorando em ...**
+* Mestre em ...
+  
