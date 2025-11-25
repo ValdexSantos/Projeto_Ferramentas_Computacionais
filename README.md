@@ -32,7 +32,7 @@ Neste projeto analisaremos dados relacionados a:
  
 
   ### Joyce Alessandra Lima
-  * **Doutoranda** em Biotecnnologia - UNESP Araraquara
+  * **Doutoranda** em Biotecnologia - UNESP Araraquara
   * Mestra em Ciências da Saúde com Ênfase em Oncologia Molecular - Hospital de Amor
   * Especialista em Biomedicina com Ênfase em Oncologia Molecular - Hospital de Amor
   * Bacharelado em Biomedicina - FHO/Uniararas
