@@ -16,6 +16,7 @@ Neste projeto analisaremos dados relacionados a:
   ### Valdex Santos
   * **Doutorando** em Ciências Ambientais - UNESP Sorocaba.
   * Mestre em Modelagem Computacional em Ciência e Tecnologia
+  * Especialista em Engenharia de Sistemas
   * Licenciado em Matemática
 
 
@@ -40,3 +41,4 @@ Neste projeto analisaremos dados relacionados a:
 ---  
 ## Banco de Dados
 Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
+
