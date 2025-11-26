@@ -1617,6 +1617,7 @@ grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
 
 ```
 
+
 # 4. Resultados e Conclusões
 
 ## 4.1. Síntese dos resultados
