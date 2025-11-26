@@ -7,7 +7,7 @@ output: html_notebook
 
 # 1. Introdução
 
-Neste notebook do R iremos analisar microdados educaionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
+Neste notebook do R iremos analisar microdados educacionais extraidos do [Senso Educacional 2024] (https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior)
 
 ## 1.1. Objetivo Geral
 
@@ -27,10 +27,10 @@ Analisar a distribuição geográfica das IES no Brasil:
 # 2. Lendo os dados
 Os comandos abaixo fará a leitura dos seguintes dados:
 
-* dicionáario de dados onde contem ...
++ dicionário de dados
 + Cadastro de cursos superiores
-+ Cadastro das instituções de educação, abragendo Universidades e Institutos Federais
-+
++ Cadastro das instituções de educação, abrangendo Universidades e Institutos Federais
+
 
 ```{r,echo=FALSE}
 library(readxl)
@@ -263,7 +263,7 @@ total <- sum(tabela_frequencia$Valores_absolutos)
 cat(paste("Total de instituições:", total, "\n\n"))
 ```
 
-Temos um total de 2561 Instituições de Ensino Superior (IES) no Brasil, segundo os dados disponibilizados. Destas a grande maioria, cerca de 42, 01% estão localizadas na região Sudeste. a região Norte é o que tem menos insitutições superiores, apenas 7,65%. Observe que se somarmos o quantitativo das regiões Norte, Sul e Centro-Oeste não atingimos o total de instituições da região sudeste.  O que mostra a grande discrepância do número de instituições de nível superior nas regiões do Brasil, conforme evidencia o gráfico seguinte.
+Temos um total de 2561 Instituições de Ensino Superior (IES) no Brasil, segundo os dados disponibilizados. Destas a grande maioria, cerca de 42, 01% estão localizadas na região Sudeste. a região Norte é o que tem menos instituições superiores, apenas 7,65%. Observe que se somarmos o quantitativo das regiões Norte, Sul e Centro-Oeste não atingimos o total de instituições da região sudeste.  O que mostra a grande discrepância do número de instituições de nível superior nas regiões do Brasil, conforme evidencia o gráfico seguinte.
 
 
 ```{r}
@@ -324,7 +324,7 @@ kable(
 
 ```
 
-Observamos que a região Centro-Oeste, apesar de ser a segunda menor em número de IES, em termos proporcionais a população, é a que apresentar maior número proporcional de IES. O que vai de encontro aos valores absolutos. A região Sudeste que tem o maior percentual de IES,em termos proporcionais tem menos IES do que a própria região Sul. Neste sentido, a distribuição de IES no território nacional não privelegia Regiões mais populosas, conseguindo equilibrar a demandanda regional.
+Observamos que a região Centro-Oeste, apesar de ser a segunda menor em número de IES, em termos proporcionais a população, é a que apresentar maior número proporcional de IES. O que vai de encontro aos valores absolutos. A região Sudeste que tem o maior percentual de IES,em termos proporcionais tem menos IES do que a própria região Sul. Neste sentido, a distribuição de IES no território nacional não privilegia Regiões mais populosas, conseguindo equilibrar a demanda regional.
 
 ###3.1.1  IES por Unidades Federativas (UFs)
 
@@ -363,7 +363,7 @@ tabela_est_ord <- tabela_est %>%
 tabela_est_ord
 ```
 
-Quando analisamos o quantitativo de instituições por estado, temos um panorama não muito diferente (Figura 2). No entanto, com exceção de São Paulo e Minas Gerais, que são os estados mais populosos do Brasil (IBGE, 2022) e que possui o maior número de IES, o estado do Rio de Janeiro, por exemplo, que é o terceiro mais populoso, tem menos IES do que Paraná e Bahia. Na outra ponta, os estados menos populosos também segue com o menor número de IES, como Roraima, Amapá e Acre. 
+Quando analisamos o quantitativo de instituições por estado, temos um panorama não muito diferente (Figura 2). No entanto, com exceção de São Paulo e Minas Gerais, que são os estados mais populosos do Brasil (IBGE, 2022) e que possui o maior número de IES, o estado do Rio de Janeiro, por exemplo, que é o terceiro mais populoso, tem menos IES do que Paraná e Bahia. Na outra ponta, os estados menos populosos também seguem com o menor número de IES, como Roraima, Amapá e Acre. 
 
 ```{r}
 
@@ -376,7 +376,7 @@ library(forcats)
 ggplot(tabela_est, aes(x = fct_reorder(UF, `Val._absolutos`), y = `Val._absolutos`)) +
   geom_bar(stat = "identity", aes(fill = UF)) + # O ggplot2 gera 27 cores
   labs(
-    title = 'Figra 2: Distribuição de Instituições por UF',
+    title = 'Figura 2: Distribuição de Instituições por UF',
     x = 'UF',
     y = 'Quantidade de Instituições (Valores Absolutos)'
   ) +
@@ -521,7 +521,7 @@ quant_cursos <- data.frame(
 
 Vamos analisar quais são os 10 cursos que são oferecidos em maior quantidade, para isso fazemos um código que contabiliza quantas vezes cada curso é oferecido, organiza os cursos em ordem decrescente de quantidade e separa os 10 mais oferecidos.
 
-Em um panorama dos cursos superiores das IES, o curso mais presente é o de Pedagogia (21063 cursos), cerca de 2,92%, seguido de sistema de informação (2,82%) e adiministração (2,67%). A Tabela 4 exibe os 10 cursos em maior quantidade, com destaque para Sistemas de informação	na segunda posição. Outros curso não tão populares figuram também na lista, tais como Gestão Comercial e Gestão de Negócios.
+Em um panorama dos cursos superiores das IES, o curso mais presente é o de Pedagogia (21063 cursos), cerca de 2,92%, seguido de sistema de informação (2,82%) e administração (2,67%). A Tabela 4 exibe os 10 cursos em maior quantidade, com destaque para Sistemas de informação	na segunda posição. Outros curso não tão populares figuram também na lista, tais como Gestão Comercial e Gestão de Negócios.
 Gestão Financeira e Logística.
 
 ```{r}
@@ -574,7 +574,7 @@ library(knitr)
 
 kable(
   ord_tipo,
-  caption = "Tabela 5: Quantitativo e percentua de Cursos por tipo",
+  caption = "Tabela 5: Quantitativo e percentual de Cursos por tipo",
   format = "pipe"
 )
 
@@ -746,7 +746,7 @@ ggplot(concluinte, aes(x = regiao, y = qnt_concluintes, fill = tipo_de_inst)) +
   )
 ```
 
-Como podemos observar há muito mais ofertas e portanto, muito mais ongressantes em instituições privada (88,52%) do que em instituições públicas, assim como concluientes. No entato, a taxa de conclusão, ou seja, a razão entre ingressantes e concluintes é muito maior em instituções públicas. Em outras palavras os alunos que ingressam em IES publicam concluem mais, o que indica que a evasão ou abandono em IES privadas é maior.
+Como podemos observar há muito mais ofertas e portanto, muito mais ingressantes em instituições privadas (88,52%) do que em instituições públicas, assim como concluientes. No entato, a taxa de conclusão, ou seja, a razão entre ingressantes e concluintes é muito maior em instituções públicas. Em outras palavras os alunos que ingressam em IES publicam concluem mais, o que indica que a evasão ou abandono em IES privadas é maior.
 
 
 
@@ -822,7 +822,7 @@ porcentagem_escolaridade_geral %>%
 
 ```
 
-Na Figura 6, percebemos que, em geral, o nível de escolaridade das mulheres, em relação ao total delas, é maior que dos homens. Quanto maior a qualificação, maior é a "vantagem" das mulheres servidores em relação aos homens. Isso significa que as mulheres procuram se qualificar mais nas funções de nível técnico dentro das IES.
+Na Figura 6, percebemos que, em geral, o nível de escolaridade das mulheres, em relação ao total delas, é maior que dos homens. Quanto maior a qualificação, maior é a "vantagem" das mulheres servidores em relação aos homens. Isso indica que as mulheres buscam maior qualificação nas funções técnicas das IES.
 
 
 ```{r}
@@ -926,7 +926,7 @@ A menor diferença está nos funcionários que tem doutorado. Nas IES, o número
 
 ### 3.5.2. Quantidade de técnicos por instituição pública e privada
 
-Apesar do número de instituições privadas serem superiores ao número de instituições públicas (2244 x 317), a distribuição dos técnicos é bastante equilibrada (Figura 7), sendo 50,89% em ies públcias e 49,11% em IES privadas. Isto pode indicar que funcionários em IES privadas podem excecer diversas funções ou também retratar menos serviços oferecidos ou até mesmo reutilização de maão de obra.
+Apesar do número de instituições privadas serem superiores ao número de instituições públicas (2244 x 317), a distribuição dos técnicos é bastante equilibrada (Figura 7), sendo 50,89% em ies públcias e 49,11% em IES privadas. Isto pode indicar que funcionários em IES privadas podem exercer diversas funções ou também retratar menos serviços oferecidos ou até mesmo reutilização de maão de obra.
 
 ```{r}
 library(dplyr)
@@ -1403,7 +1403,7 @@ ggplot(plot_df, aes(x = faixa_etaria, y = total_docentes, fill = faixa_etaria)) 
   )
 
 ```
-Vale salientar que a quarta faixa etária que possui mais docentes é a dos docentes que tem mais de 60 anos (certa de 13,5%), o que acende um alerta, já que estes estão próximos à aposentadoria. A faixa etária com menor número de docentes é que corresponde aos docentes com menos de 29 anos, representando apenas 3,5% do total. Isso indica uma menor presença de docentes iniciantes na carreira do magistério nas IES e  uma entrada mais tardia na carreira docente ou menor atratividade para os mais jovens.. 
+Vale salientar que a quarta faixa etária que possui mais docentes é a dos docentes que tem mais de 60 anos (cerca de 13,5%), o que acende um alerta, já que estes estão próximos à aposentadoria. A faixa etária com menor número de docentes é que corresponde aos docentes com menos de 29 anos, representando apenas 3,5% do total. Isso indica uma menor presença de docentes iniciantes na carreira do magistério nas IES e  uma entrada mais tardia na carreira docente ou menor atratividade para os mais jovens.. 
 
 
 ### 3.6.4. Perfil étinico dos docentes
@@ -1617,3 +1617,28 @@ grep("regiao", names(cadastro_cursos), value = TRUE, ignore.case = TRUE)
 
 ```
 
+# 4. Resultados e Conclusões
+
+## 4.1. Síntese dos resultados
+
+A análise dos microdados da Educação Superior no Brasil revelou um total de 2.561 Instituições de Ensino Superior (IES). A distribuição regional mostra concentração no Sudeste (42,01%), seguido pelo Nordeste (23,58%), Sul (15,19%), Centro-Oeste (11,56%) e Norte (7,65%). Em termos proporcionais à população, o Centro-Oeste apresenta maior densidade de IES, enquanto o Sudeste, apesar de liderar em números absolutos, possui menor proporção relativa.
+
+No recorte por estados, São Paulo e Minas Gerais concentram os maiores quantitativos, enquanto Roraima, Amapá e Acre figuram entre os menores. Observou-se também que, embora estados populosos como Rio de Janeiro tenham grande demanda, apresentam menos IES do que estados como Paraná e Bahia, evidenciando disparidades regionais.
+
+Quanto à natureza das instituições, verificou-se a predominância das privadas (87,6%), em contraste com apenas 12,4% de públicas. Apesar disso, as IES públicas apresentaram taxas de conclusão superiores, indicando maior permanência e menor evasão.
+
+No que se refere aos cursos, identificou-se forte concentração em áreas empresariais e tecnológicas, com destaque para Pedagogia, Sistemas de Informação e Administração entre os mais ofertados. Os cursos tecnólogos representam quase metade da oferta (47%), refletindo a busca por formações rápidas e voltadas ao mercado de trabalho. Em contrapartida, apenas 18,95% dos cursos são licenciaturas, o que pode estar relacionado à desvalorização da carreira docente.
+
+A análise das vagas e matrículas mostrou que o Sudeste lidera em oferta e preenchimento, enquanto o Centro-Oeste apresenta menor volume. Contudo, em termos de taxa de conclusão, as instituições públicas se destacam, reforçando sua papel na formação acadêmica.
+
+No perfil dos funcionários técnicos, verificou-se predominância feminina (55,4%) e maior concentração nos níveis médio, superior e especialização. Já entre os docentes, identificou-se um total de 374.501 profissionais, com leve predominância masculina (52,2%). A maioria possui titulação de doutorado (53%) ou mestrado (32%), evidenciando elevada qualificação. Entretanto, persistem desigualdades étnico-raciais: 61,9% dos docentes se declaram brancos, enquanto pretos e indígenas representam menos de 4% do total.
+
+Por fim, no perfil discente, observou-se uma disparidade significativa entre matrículas e conclusões, indicando altas taxas de evasão. A maioria dos ingressantes está na faixa etária de 18 a 24 anos, mas há também presença expressiva de adultos jovens. Em termos étnicos, predominam estudantes brancos, seguidos por pardos, enquanto pretos, indígenas e amarelos apresentam baixa representatividade.
+
+## 4.2. Discussão
+
+Os resultados revelam um sistema de ensino superior marcado por contrastes: expansão e diversidade regional, mas também concentração em poucos estados; predominância de instituições privadas, mas maior taxa de conclusão nas públicas; elevada qualificação docente, mas persistência de desigualdades étnico-raciais; ampla oferta de cursos tecnólogos, mas baixa valorização das licenciaturas.
+
+## 4.3. Considerações Finais
+
+Em síntese, o estudo evidencia desafios estruturais — como evasão, desigualdade étnico-racial e desvalorização da docência —, mas também avanços significativos, como a expansão das IES em diferentes regiões, a qualificação crescente do corpo docente e a diversificação da oferta de cursos. Tais achados reforçam a necessidade de políticas públicas voltadas à equidade regional, à valorização da carreira docente e ao incentivo à permanência estudantil, assegurando que o ensino superior cumpra seu papel de democratização do conhecimento e promoção do desenvolvimento social.
