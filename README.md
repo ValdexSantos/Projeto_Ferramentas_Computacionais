@@ -28,8 +28,9 @@ Neste projeto analisaremos dados relacionados a:
 
 
 
-  ### Amauri ...
-  * **Doutorando** em ...
+  ### Amauri Gonçalves da Silva Junior
+  * **Mestrando** em Educação para a Ciência - Unesp Bauru
+  * Licenciado em Física pela Unesp Ilha Solteira
 
  
 
