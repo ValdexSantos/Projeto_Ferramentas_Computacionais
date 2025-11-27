@@ -21,7 +21,7 @@ Neste projeto analisaremos dados relacionados a:
 
 
 
-  ### Francisco
+  ### Francisco Inácio Paiva Ferreira
   * **Doutorando** em Ciências Biológicas (Biologia Celular, Molecular e Microbiologia) - UNESP Rio Claro.
   * Mestre em Produção Vegetal e Bioprocessos Associados - UFSCar Araras.
   * Licenciado em Ciências Biológicas - UFSCar Araras.
